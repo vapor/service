@@ -48,6 +48,15 @@ class ServiceTests: XCTestCase {
         print(log)
     }
 
+    func testProvider() throws {
+        let config = Config()
+        var services = Services()
+        try services.register(AllCapsProvider.self, using: config)
+
+        let container = TestContainer(config: config, services: services)
+        let log = try container.make(AllCapsLog.self)
+        print(log)
+    }
 
     static var allTests = [
         ("testHappyPath", testHappyPath),

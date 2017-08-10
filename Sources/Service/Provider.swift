@@ -7,7 +7,7 @@ import Configs
 ///
 ///The Provider should take care of setting up any
 ///necessary configurations on itself and the container.
-public protocol Provider: ConfigInitializable {
+public protocol Provider {
     /// This should be the name of the actual repository
     /// that contains the Provider.
     /// 

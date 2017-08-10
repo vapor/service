@@ -48,3 +48,16 @@ extension AllCapsLog: ServiceType {
 }
 
 
+class AllCapsProvider: Provider, ConfigInitializable {
+    static let repositoryName = "all-caps-provider"
+
+    required init(config: Config) throws {
+        
+    }
+
+    func register(_ services: inout Services) throws {
+        services.register(AllCapsLog.self)
+    }
+
+    func boot(_ container: Container) throws { }
+}
