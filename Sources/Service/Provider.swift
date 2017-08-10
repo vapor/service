@@ -1,5 +1,3 @@
-import Configs
-
 /// Providers allow external projects to be easily
 /// integrated into an application's service container.
 ///

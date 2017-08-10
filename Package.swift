@@ -5,7 +5,6 @@ let package = Package(
     name: "Service",
     products: [
         .library(name: "Service", targets: ["Service"]),
-        .library(name: "Configs", targets: ["Configs"]),
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/mapper.git", .branch("beta")),
@@ -13,9 +12,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/debugging.git", .upToNextMajor(from: "1.1.0")),
     ],
     targets: [
-        .target(name: "Service", dependencies: ["Configs", "Debugging", "Core"]),
+        .target(name: "Service", dependencies: ["Debugging", "Core", "Mapper"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
-        .target(name: "Configs", dependencies: ["Mapper"]),
-        .testTarget(name: "ConfigsTests", dependencies: ["Configs"]),
     ]
 )

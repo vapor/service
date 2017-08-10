@@ -1,4 +1,3 @@
-import Configs
 import Service
 
 final class TestContainer: Container {

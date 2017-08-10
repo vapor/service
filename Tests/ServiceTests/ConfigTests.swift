@@ -1,5 +1,5 @@
 import XCTest
-@testable import Configs
+import Service
 
 class ConfigTests: XCTestCase {
     func testLoad() throws {

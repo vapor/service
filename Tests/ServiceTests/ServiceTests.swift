@@ -1,6 +1,5 @@
 import XCTest
 import Service
-import Configs
 
 class ServiceTests: XCTestCase {
     func testHappyPath() throws {
