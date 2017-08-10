@@ -1,4 +1,3 @@
 # Service
 
-A description of this package.
-# service
+Work in progress.
