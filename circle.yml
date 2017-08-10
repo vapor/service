@@ -8,3 +8,4 @@ test:
     - swift build
     - swift build -c release
     - swift test
+    
