@@ -115,20 +115,26 @@ extension Config: Polymorphic {}
 extension Config: Keyed {
     public var empty: Config { return .dictionary([:]) }
 
-    public mutating func set(key: String, to value: Config?) {
-        var dict: [String: Config]
-        switch self {
-        case .dictionary(let existing):
-            dict = existing
-        default:
-            dict = [:]
+    public mutating func set(key: PathComponent, to value: Config?) {
+        switch key {
+        case .index(let int):
+            var array = self.array ?? []
+            array[safe: int] = value ?? .null
+            self = .array(array)
+        case .key(let string):
+            var dict = dictionary ?? [:]
+            dict[string] = value ?? .null
+            self = .dictionary(dict)
         }
-        dict[key] = value
-        self = .dictionary(dict)
     }
 
-    public func get(key: String) -> Config? {
-        return dictionary?[key]
+    public func get(key: PathComponent) -> Config? {
+        switch key {
+        case .index(let int):
+            return array?[safe: int]
+        case .key(let string):
+            return dictionary?[string]
+        }
     }
 }
 
