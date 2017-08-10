@@ -1,9 +1,11 @@
 /// Services available for a service container.
 public struct Services {
     var factories: [ServiceFactory]
+    public internal(set) var providers: [Provider]
 
     public init() {
         self.factories = []
+        self.providers = []
     }
 }
 
@@ -42,6 +44,10 @@ extension Services {
 
     /// Adds an initialized provider
     public mutating func register<P: Provider>(_ provider: P) throws {
+        guard !providers.contains(where: { type(of: $0) == P.self }) else {
+            return
+        }
         try provider.register(&self)
+        providers.append(provider)
     }
 }
