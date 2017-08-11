@@ -7,7 +7,7 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(PrintLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = try TestContainer(config: config, services: services)
         let log = try container.make(Log.self)
         log.log("hello!")
     }
@@ -19,7 +19,7 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = try TestContainer(config: config, services: services)
         let log = try container.make(Log.self)
         log.log("hello!")
     }
@@ -31,7 +31,7 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = try TestContainer(config: config, services: services)
         let log = try container.make([Log.self])
         XCTAssertEqual(log.count, 2)
     }
@@ -42,7 +42,7 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = try TestContainer(config: config, services: services)
         let log = try container.make(AllCapsLog.self)
         print(log)
     }
@@ -52,7 +52,7 @@ class ServiceTests: XCTestCase {
         var services = Services()
         try services.register(AllCapsProvider.self, using: config)
 
-        let container = TestContainer(config: config, services: services)
+        let container = try TestContainer(config: config, services: services)
         let log = try container.make(AllCapsLog.self)
         print(log)
     }

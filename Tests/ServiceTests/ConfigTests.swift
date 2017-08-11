@@ -13,7 +13,7 @@ class ConfigTests: XCTestCase {
         let bcryptConfig = BCryptConfig(cost: 4)
         services.register(bcryptConfig, name: "bcrypt")
 
-        let container = TestContainer(
+        let container = try TestContainer(
             config: config,
             environment: .production,
             services: services
@@ -31,7 +31,7 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
         services.register(BCryptConfig.self)
 
-        let container = TestContainer(
+        let container = try TestContainer(
             config: config,
             environment: .production,
             services: services
@@ -48,7 +48,7 @@ class ConfigTests: XCTestCase {
         var services = Services()
         services.register(BCryptHasher.self)
 
-        let container = TestContainer(
+        let container = try TestContainer(
             config: config,
             environment: .production,
             services: services
@@ -76,7 +76,7 @@ class ConfigTests: XCTestCase {
         let bcryptConfig = try BCryptConfig(config: config)
         services.register(bcryptConfig, name: "bcrypt")
 
-        let container = TestContainer(
+        let container = try TestContainer(
             config: config,
             services: services
         )
@@ -85,10 +85,39 @@ class ConfigTests: XCTestCase {
         XCTAssertEqual(hasher.hash("foo"), "$2y:42:foo")
     }
 
+    /// Tests too many BCryptConfigs registered
+    func testBCryptConfigTooManyError() throws {
+        let config: Config = ["foo": "bar"]
+
+        var services = Services()
+        services.register(BCryptHasher.self)
+
+        let bcryptConfig4 = BCryptConfig(cost: 4)
+        services.register(bcryptConfig4, name: "bcrypt-4")
+        let bcryptConfig5 = BCryptConfig(cost: 5)
+        services.register(bcryptConfig5, name: "bcrypt-5")
+
+        let container = try TestContainer(
+            config: config,
+            environment: .production,
+            services: services
+        )
+
+        do {
+            _ = try container.make(Hasher.self)
+            XCTFail("No error thrown")
+        } catch let error as ServiceError {
+            print(error)
+            XCTAssertEqual(error.reason, "Multiple services available for 'BCryptConfig', please disambiguate using config.")
+            XCTAssert(error.suggestedFixes.contains("Available services: [\"bcrypt-4\", \"bcrypt-5\"]"))
+        }
+    }
+
     static let allTests = [
         ("testBCryptConfig", testBCryptConfig),
         ("testBCryptConfigType", testBCryptConfigType),
         ("testBCryptConfigError", testBCryptConfigError),
         ("testBCryptConfigLegacy", testBCryptConfigLegacy),
+        ("testBCryptConfigTooManyError", testBCryptConfigTooManyError),
     ]
 }

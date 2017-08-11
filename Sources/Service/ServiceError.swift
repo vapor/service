@@ -100,7 +100,7 @@ extension ServiceError {
         case .disambiguationRequired(let key, let available, _):
             return [
                 "Specify one of the available services in `app.json` at key `\(key)`.",
-                "Use `try config.set(\"app.\(key)\", <service>)` with one of the available service names.",
+                "Use `try config.set(\"app\", \"\(key)\", to: \"<service>\")` with one of the available service names.",
                 "Available services: \(available)"
             ]
         case .unknownService(_, let available, _):

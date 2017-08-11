@@ -1,17 +1,25 @@
 import Service
 
 final class TestContainer: Container {
-    static var configKey = "app"
-    let config: Config
+    let disambiguator: Disambiguator
     let environment: Environment
     let services: Services
     var extend: [String: Any]
 
-    init(config: Config, environment: Environment = .development, services: Services) {
-        self.config = config
+    init(disambiguator: Disambiguator, environment: Environment = .development, services: Services) {
+        self.disambiguator = disambiguator
         self.environment = environment
         self.services = services
         self.extend = [:]
+    }
+
+    convenience init(config: Config, environment: Environment = .development, services: Services) throws {
+        let cd = try ConfigDisambiguator(config: config.get("app"))
+        self.init(
+            disambiguator: cd,
+            environment: environment,
+            services: services
+        )
     }
 }
 
