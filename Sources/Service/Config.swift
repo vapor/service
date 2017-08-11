@@ -113,7 +113,7 @@ extension Config: Polymorphic {}
 // MARK: keyed
 
 extension Config: Keyed {
-    public var empty: Config { return .dictionary([:]) }
+    public static var empty: Config { return .dictionary([:]) }
 
     public mutating func set(key: PathComponent, to value: Config?) {
         switch key {
@@ -166,3 +166,47 @@ extension Optional: ConfigConvertible {}
 extension String: ConfigConvertible {}
 extension Int: ConfigConvertible {}
 extension Double: ConfigConvertible {}
+
+// MARK: Literal
+
+extension Config: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) {
+        self = .null
+    }
+}
+
+extension Config: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: Config...) {
+        self = .array(elements)
+    }
+}
+
+extension Config: ExpressibleByFloatLiteral {
+    public init(floatLiteral value: Double) {
+        self = .double(value)
+    }
+}
+
+extension Config: ExpressibleByIntegerLiteral {
+    public init(integerLiteral value: Int) {
+        self = .int(value)
+    }
+}
+
+extension Config: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .string(value)
+    }
+}
+
+extension Config: ExpressibleByBooleanLiteral {
+    public init(booleanLiteral value: Bool) {
+        self = .bool(value)
+    }
+}
+
+extension Config: ExpressibleByDictionaryLiteral {
+    public init(dictionaryLiteral elements: (String, Config)...) {
+        self = .dictionary(Dictionary(uniqueKeysWithValues: elements))
+    }
+}

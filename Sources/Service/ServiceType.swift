@@ -25,13 +25,4 @@ extension ServiceType {
     public static var serviceIsSingleton: Bool {
         return true
     }
-
-
-    /// Default name is class name lowercased.
-    public static var serviceName: String {
-        return "\(self)"
-            .splitUppercaseCharacters()
-            .joined(separator: "-")
-            .lowercased()
-    }
 }
