@@ -13,13 +13,25 @@ final class TestContainer: Container {
         self.extend = [:]
     }
 
-    convenience init(config: Config, environment: Environment = .development, services: Services) throws {
-        let cd = try ConfigDisambiguator(config: config.get("app"))
+    convenience init(environment: Environment = .development, services: Services) throws {
+        let cd = FirstDisambiguator()
         self.init(
             disambiguator: cd,
             environment: environment,
             services: services
         )
+    }
+}
+
+// MARK: Disambiguator
+
+class FirstDisambiguator: Disambiguator {
+    func disambiguateSingle<Type>(available: [ServiceFactory], type: Type.Type, for container: Container) throws -> ServiceFactory {
+        return available[0]
+    }
+
+    func disambiguateMultiple<Type>(available: [ServiceFactory], type: Type.Type, for container: Container) throws -> [ServiceFactory] {
+        return available
     }
 }
 
@@ -59,12 +71,8 @@ extension AllCapsLog: ServiceType {
 }
 
 
-class AllCapsProvider: Provider, ConfigInitializable {
+class AllCapsProvider: Provider {
     static let repositoryName = "all-caps-provider"
-
-    required init(config: Config) throws {
-        
-    }
 
     func register(_ services: inout Services) throws {
         services.register(AllCapsLog.self)
@@ -113,10 +121,6 @@ struct BCryptConfig {
     let cost: Int
     init(cost: Int) {
         self.cost = cost
-    }
-
-    init(config: Config) throws {
-        cost = try config.get("bcrypt", "cost")
     }
 }
 
