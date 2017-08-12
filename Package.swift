@@ -7,12 +7,14 @@ let package = Package(
         .library(name: "Service", targets: ["Service"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/mapper.git", .branch("beta")),
-        .package(url: "https://github.com/vapor/core.git", .upToNextMajor(from: "2.1.0")),
-        .package(url: "https://github.com/vapor/debugging.git", .upToNextMajor(from: "1.1.0")),
+        // Core extensions, type-aliases, and functions that facilitate common tasks.
+        .package(url: "https://github.com/vapor/core.git", .branch("beta")),
+
+        // A library to aid Vapor users with better debugging around the framework
+        .package(url: "https://github.com/vapor/debugging.git", .branch("beta")),
     ],
     targets: [
-        .target(name: "Service", dependencies: ["Debugging", "Core", "Mapper"]),
+        .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
     ]
 )

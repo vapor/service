@@ -22,7 +22,7 @@ extension Services {
     public mutating func register<S>(
         _ instance: S,
         name: String,
-        supports: [Any.Type],
+        supports: [Any.Type] = [],
         isSingleton: Bool = true
     ) {
         let factory = BasicServiceFactory(S.self, name: name, supports: supports, isSingleton: isSingleton) { drop in
