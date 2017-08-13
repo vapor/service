@@ -78,7 +78,7 @@ extension Container {
     fileprivate func _makeServiceFactoryConsultingCache<T>(
         _ serviceFactory: ServiceFactory, ofType: T.Type
     ) throws -> T? {
-        let key = "\(serviceFactory.serviceType)-\(serviceFactory.serviceName)"
+        let key = "\(serviceFactory.serviceType)"
         if serviceFactory.serviceIsSingleton {
             if let cached = serviceCache[key] as? T {
                 return cached
@@ -87,7 +87,6 @@ extension Container {
 
         guard let new = try serviceFactory.makeService(for: self) as? T? else {
             throw ServiceError.incorrectType(
-                name: serviceFactory.serviceName,
                 type: serviceFactory.serviceType,
                 desired: T.self
             )

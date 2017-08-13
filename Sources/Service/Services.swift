@@ -21,11 +21,10 @@ extension Services {
     /// Adds an instance of a service to the Services.
     public mutating func register<S>(
         _ instance: S,
-        name: String,
         supports: [Any.Type] = [],
         isSingleton: Bool = true
     ) {
-        let factory = BasicServiceFactory(S.self, name: name, supports: supports, isSingleton: isSingleton) { drop in
+        let factory = BasicServiceFactory(S.self, supports: supports, isSingleton: isSingleton) { drop in
             return instance
         }
         register(factory)
@@ -33,13 +32,13 @@ extension Services {
 
     /// Adds any type conforming to ServiceFactory
     public mutating func register(_ factory: ServiceFactory) {
-        guard !factories.contains(where: {
-            $0.serviceType == factory.serviceType && $0.serviceName == factory.serviceName
-        }) else {
-            return
+        if let existing = factories.index(where: {
+            $0.serviceType == factory.serviceType
+        }) {
+            factories[existing] = factory
+        } else {
+            factories.append(factory)
         }
-        
-        factories.append(factory)
     }
 
     /// Adds an initialized provider

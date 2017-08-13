@@ -8,7 +8,7 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
 
         let bcryptConfig = BCryptConfig(cost: 4)
-        services.register(bcryptConfig, name: "bcrypt")
+        services.register(bcryptConfig)
 
         let container = try TestContainer(
             environment: .production,
@@ -58,16 +58,17 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
 
         let bcryptConfig4 = BCryptConfig(cost: 4)
-        services.register(bcryptConfig4, name: "bcrypt-4")
+        services.register(bcryptConfig4)
         let bcryptConfig5 = BCryptConfig(cost: 5)
-        services.register(bcryptConfig5, name: "bcrypt-5")
+        services.register(bcryptConfig5)
 
         let container = try TestContainer(
             environment: .production,
             services: services
         )
 
-        _ = try container.make(Hasher.self)
+        let hasher = try container.make(Hasher.self)
+        XCTAssertEqual(hasher.hash("foo"), "$2y:5:foo")
     }
 
     static let allTests = [
