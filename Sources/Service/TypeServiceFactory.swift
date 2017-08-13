@@ -3,10 +3,6 @@ public struct TypeServiceFactory<S: ServiceType>: ServiceFactory {
         return S.self
     }
 
-    public var serviceName: String {
-        return S.serviceName
-    }
-
     public var serviceIsSingleton: Bool {
         return S.serviceIsSingleton
     }
