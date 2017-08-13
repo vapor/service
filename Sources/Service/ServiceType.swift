@@ -1,9 +1,4 @@
 public protocol ServiceType {
-    /// This service's name.
-    /// Used to disambiguate services if multiple
-    /// conforming ot the requested interface are available.
-    static var serviceName: String { get }
-
     /// If true, the `makeService` method will only
     /// be called once and the service instance will be cached.
     /// Defaults to true.
