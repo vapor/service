@@ -19,3 +19,20 @@ extension Environment {
         }
     }
 }
+
+extension Environment: Equatable {
+    public static func ==(lhs: Environment, rhs: Environment) -> Bool {
+        switch (lhs, rhs) {
+        case (.production, .production):
+            return true
+        case (.development, .development):
+            return true
+        case (.testing, .testing):
+            return true
+        case (.custom(let a), .custom(let b)):
+            return a == b
+        default:
+            return false
+        }
+    }
+}
