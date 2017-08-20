@@ -65,6 +65,24 @@ extension Services {
         register(factory)
     }
 
+    /// Adds a closure based service factory
+    public mutating func register<S>(
+        _ interface: Any.Type,
+        tag: String? = nil,
+        isSingleton: Bool = true,
+        factory: @escaping (Container) throws -> (S)
+    ) {
+        let factory = BasicServiceFactory(
+            S.self,
+            tag: tag,
+            supports: [interface],
+            isSingleton: isSingleton
+        ) { container in
+            try factory(container)
+        }
+        register(factory)
+    }
+
     /// Adds an initialized provider
     public mutating func register<P: Provider>(_ provider: P) throws {
         guard !providers.contains(where: { type(of: $0) == P.self }) else {
