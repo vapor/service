@@ -30,7 +30,7 @@ extension Services {
             tag: tag,
             supports: supports,
             isSingleton: isSingleton
-        ) { drop in
+        ) { container in
             return instance
         }
         register(factory)
@@ -45,6 +45,24 @@ extension Services {
         } else {
             factories.append(factory)
         }
+    }
+
+    /// Adds a closure based service factory
+    public mutating func register<S>(
+        _ supports: [Any.Type] = [],
+        tag: String? = nil,
+        isSingleton: Bool = true,
+        factory: @escaping (Container) throws -> (S)
+    ) {
+        let factory = BasicServiceFactory(
+            S.self,
+            tag: tag,
+            supports: supports,
+            isSingleton: isSingleton
+        ) { container in
+            try factory(container)
+        }
+        register(factory)
     }
 
     /// Adds an initialized provider
