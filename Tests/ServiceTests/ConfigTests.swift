@@ -4,48 +4,55 @@ import Service
 class ConfigTests: XCTestCase {
     /// Tests that BCryptConfig can be added as an instance
     func testBCryptConfig() throws {
+        let config = Config()
+
         var services = Services()
         services.register(BCryptHasher.self)
 
         let bcryptConfig = BCryptConfig(cost: 4)
         services.register(bcryptConfig)
 
-        let container = try TestContainer(
+        let container = TestContainer(
             environment: .production,
+            config: config,
             services: services
         )
 
-        let hasher = try container.make(Hasher.self)
+        let hasher = try container.make(Hasher.self, for: ConfigTests.self)
         XCTAssertEqual(hasher.hash("foo"), "$2y:4:foo")
     }
 
     /// Tests BCryptConfig can be added as a ServiceType
     func testBCryptConfigType() throws {
+        let config = Config()
         var services = Services()
         services.register(BCryptHasher.self)
         services.register(BCryptConfig.self)
 
-        let container = try TestContainer(
+        let container = TestContainer(
             environment: .production,
+            config: config,
             services: services
         )
 
-        let hasher = try container.make(Hasher.self)
+        let hasher = try container.make(Hasher.self, for: ConfigTests.self)
         XCTAssertEqual(hasher.hash("foo"), "$2y:12:foo")
     }
 
     /// Tests lack of BCryptConfig results correct error message
     func testBCryptConfigError() throws {
+        let config = Config()
         var services = Services()
         services.register(BCryptHasher.self)
 
-        let container = try TestContainer(
+        let container = TestContainer(
             environment: .production,
+            config: config,
             services: services
         )
 
         do {
-            _ = try container.make(Hasher.self)
+            _ = try container.make(Hasher.self, for: ConfigTests.self)
             XCTFail("No error thrown")
         } catch let error as ServiceError {
             XCTAssertEqual(error.reason, "No services are available for 'BCryptConfig'")
@@ -54,6 +61,7 @@ class ConfigTests: XCTestCase {
 
     /// Tests too many BCryptConfigs registered
     func testBCryptConfigTooManyError() throws {
+        let config = Config()
         var services = Services()
         services.register(BCryptHasher.self)
 
@@ -62,12 +70,13 @@ class ConfigTests: XCTestCase {
         let bcryptConfig5 = BCryptConfig(cost: 5)
         services.register(bcryptConfig5)
 
-        let container = try TestContainer(
+        let container = TestContainer(
             environment: .production,
+            config: config,
             services: services
         )
 
-        let hasher = try container.make(Hasher.self)
+        let hasher = try container.make(Hasher.self, for: ConfigTests.self)
         XCTAssertEqual(hasher.hash("foo"), "$2y:5:foo")
     }
 

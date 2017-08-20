@@ -11,6 +11,10 @@ public struct TypeServiceFactory<S: ServiceType>: ServiceFactory {
         return S.serviceSupports
     }
 
+    public var serviceTag: String? {
+        return nil
+    }
+
     public func makeService(for container: Container) throws -> Any? {
         return try S.makeService(for: container)
     }

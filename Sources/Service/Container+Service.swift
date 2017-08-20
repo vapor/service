@@ -1,76 +1,50 @@
 import Foundation
 
-private let serviceCacheKey = "service:serviceCache"
+private let serviceCacheKey = "service:service-cache"
 
 extension Container {
-    /// Makes all available services for the given type.
-    ///
-    /// If a protocol is supplied, all services conforming
-    /// to the protocol will be returned.
-    public func make<Type>(_ type: [Type.Type] = [Type.self]) throws -> [Type] {
-        // create a key name for caching the result
-        // the make array always caches
-        let keyName = "array-\(Type.self)"
-
-        // check to see if we already have a cached result
-        if let existing = serviceCache[keyName] as? [Type] {
-            return existing
-        }
-
-        // find all available service types
-        let availableServices = services.factories(supporting: Type.self)
-
-        // disambiguate the chosen types
-        let chosenServices = try disambiguator.disambiguateMultiple(
-            available: availableServices,
-            type: Type.self,
-            for: self
-        )
-
-        // lazy loading
-        // initialize all of the requested services type.
-        // then append onto that the already intialized service instances.
-        let array = try chosenServices.flatMap { chosenService in
-            return try _makeServiceFactoryConsultingCache(chosenService, ofType: Type.self)
-        }
-
-        // cache the result
-        serviceCache[keyName] = array
-
-        return array
-    }
-
     /// Returns or creates a service for the given type.
     ///
     /// If a protocol is supplied, a service conforming
     /// to the protocol will be returned.
-    public func make<Type>(_ type: Type.Type = Type.self) throws -> Type {
+    public func make<Interface, Client>(
+        _ type: Interface.Type = Interface.self,
+        for client: Client.Type
+    ) throws -> Interface {
         // find all available service types that match the requested type.
-        let available = services.factories(supporting: Type.self)
+        let available = services.factories(supporting: Interface.self)
 
         let chosen: ServiceFactory
 
         if available.count > 1 {
             // multiple services are available,
             // we will need to disambiguate
-            chosen = try disambiguator.disambiguateSingle(
-                available: available,
-                type: Type.self,
-                for: self
+            chosen = try config.choose(
+                from: available,
+                interface: Interface.self,
+                for: self,
+                neededBy: Client.self
             )
         } else if available.count == 0 {
             // no services are available matching
             // the type requested.
-            throw ServiceError.noneAvailable(type: Type.self)
+            throw ServiceError.noneAvailable(type: Interface.self)
         } else {
             // only one service matches, no need to disambiguate.
             // let's use it!
             chosen = available[0]
         }
 
+        try config.approve(
+            chosen: chosen,
+            interface: Interface.self,
+            for: self,
+            neededBy: Client.self
+        )
+
         // lazy loading
         // create an instance of this service type.
-        let item = try _makeServiceFactoryConsultingCache(chosen, ofType: Type.self)
+        let item = try _makeServiceFactoryConsultingCache(chosen, ofType: Interface.self)
 
         return item!
     }

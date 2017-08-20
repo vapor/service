@@ -1,37 +1,16 @@
 import Service
 
 final class TestContainer: Container {
-    let disambiguator: Disambiguator
+    let config: Config
     let environment: Environment
     let services: Services
     var extend: [String: Any]
 
-    init(disambiguator: Disambiguator, environment: Environment = .development, services: Services) {
-        self.disambiguator = disambiguator
+    init(environment: Environment = .development, config: Config, services: Services) {
+        self.config = config
         self.environment = environment
         self.services = services
         self.extend = [:]
-    }
-
-    convenience init(environment: Environment = .development, services: Services) throws {
-        let cd = FirstDisambiguator()
-        self.init(
-            disambiguator: cd,
-            environment: environment,
-            services: services
-        )
-    }
-}
-
-// MARK: Disambiguator
-
-class FirstDisambiguator: Disambiguator {
-    func disambiguateSingle<Type>(available: [ServiceFactory], type: Type.Type, for container: Container) throws -> ServiceFactory {
-        return available[0]
-    }
-
-    func disambiguateMultiple<Type>(available: [ServiceFactory], type: Type.Type, for container: Container) throws -> [ServiceFactory] {
-        return available
     }
 }
 
@@ -110,7 +89,7 @@ extension BCryptHasher: ServiceType {
     }
 
     static func makeService(for container: Container) throws -> Self? {
-        let config = try container.make(BCryptConfig.self)
+        let config = try container.make(BCryptConfig.self, for: BCryptHasher.self)
         return .init(cost: config.cost)
     }
 }

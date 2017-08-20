@@ -21,10 +21,16 @@ extension Services {
     /// Adds an instance of a service to the Services.
     public mutating func register<S>(
         _ instance: S,
+        tag: String? = nil,
         supports: [Any.Type] = [],
         isSingleton: Bool = true
     ) {
-        let factory = BasicServiceFactory(S.self, supports: supports, isSingleton: isSingleton) { drop in
+        let factory = BasicServiceFactory(
+            S.self,
+            tag: tag,
+            supports: supports,
+            isSingleton: isSingleton
+        ) { drop in
             return instance
         }
         register(factory)
