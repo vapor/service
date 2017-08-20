@@ -2,29 +2,11 @@
   "object": {
     "pins": [
       {
-        "package": "Bits",
-        "repositoryURL": "https://github.com/vapor/bits.git",
-        "state": {
-          "branch": null,
-          "revision": "c32f5e6ae2007dccd21a92b7e33eba842dd80d2f",
-          "version": "1.1.0"
-        }
-      },
-      {
-        "package": "CStack",
-        "repositoryURL": "https://github.com/vapor/cstack.git",
-        "state": {
-          "branch": "master",
-          "revision": "6de084f98bc9c7ac22bf5d2a12d4888b6add97f0",
-          "version": null
-        }
-      },
-      {
         "package": "Core",
         "repositoryURL": "https://github.com/vapor/core.git",
         "state": {
           "branch": "beta",
-          "revision": "f4c613e214eefb268ec562ff95965af1d3bfb202",
+          "revision": "a3b29f00fa1cf3a644c24182263791daac0ed219",
           "version": null
         }
       },
@@ -33,7 +15,7 @@
         "repositoryURL": "https://github.com/vapor/debugging.git",
         "state": {
           "branch": "beta",
-          "revision": "85038112cc0c1e53d9c6d27b48ff0f7f5de7d260",
+          "revision": "89546a5e14fe8224b6c41c0017f1c2dd1d7dbbbc",
           "version": null
         }
       }

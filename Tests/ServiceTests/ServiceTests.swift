@@ -21,7 +21,7 @@ class ServiceTests: XCTestCase {
         services.register(AllCapsLog.self)
 
         let container = TestContainer(config: config, services: services)
-        let log = try container.make(Log.self)
+        let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
 
