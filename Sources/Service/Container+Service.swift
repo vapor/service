@@ -8,11 +8,23 @@ extension Container {
     /// If a protocol is supplied, a service conforming
     /// to the protocol will be returned.
     public func make<Interface, Client>(
-        _ type: Interface.Type = Interface.self,
+        _ interface: Interface.Type = Interface.self,
         for client: Client.Type
     ) throws -> Interface {
+        return try unsafeMake(Interface.self, for: Client.self) as! Interface
+    }
+
+    /// Returns or creates a service for the given type.
+    ///
+    /// This method accepts and returns Any.
+    ///
+    /// Use .make() for the safe method.
+    public func unsafeMake(
+        _ interface: Any.Type,
+        for client: Any.Type
+    ) throws -> Any {
         // find all available service types that match the requested type.
-        let available = services.factories(supporting: Interface.self)
+        let available = services.factories(supporting: interface)
 
         let chosen: ServiceFactory
 
@@ -21,14 +33,14 @@ extension Container {
             // we will need to disambiguate
             chosen = try config.choose(
                 from: available,
-                interface: Interface.self,
+                interface: interface,
                 for: self,
-                neededBy: Client.self
+                neededBy: client
             )
         } else if available.count == 0 {
             // no services are available matching
             // the type requested.
-            throw ServiceError.noneAvailable(type: Interface.self)
+            throw ServiceError.noneAvailable(type: interface)
         } else {
             // only one service matches, no need to disambiguate.
             // let's use it!
@@ -37,32 +49,32 @@ extension Container {
 
         try config.approve(
             chosen: chosen,
-            interface: Interface.self,
+            interface: interface,
             for: self,
-            neededBy: Client.self
+            neededBy: client
         )
 
         // lazy loading
         // create an instance of this service type.
-        let item = try _makeServiceFactoryConsultingCache(chosen, ofType: Interface.self)
+        let item = try _makeServiceFactoryConsultingCache(chosen, ofType: interface)
 
         return item!
     }
 
-    fileprivate func _makeServiceFactoryConsultingCache<T>(
-        _ serviceFactory: ServiceFactory, ofType: T.Type
-    ) throws -> T? {
+    fileprivate func _makeServiceFactoryConsultingCache(
+        _ serviceFactory: ServiceFactory, ofType type: Any.Type
+    ) throws -> Any? {
         let key = "\(serviceFactory.serviceType)"
         if serviceFactory.serviceIsSingleton {
-            if let cached = serviceCache[key] as? T {
+            if let cached = serviceCache[key] {
                 return cached
             }
         }
 
-        guard let new = try serviceFactory.makeService(for: self) as? T? else {
+        guard let new = try serviceFactory.makeService(for: self) else {
             throw ServiceError.incorrectType(
                 type: serviceFactory.serviceType,
-                desired: T.self
+                desired: type
             )
         }
 
@@ -86,9 +98,9 @@ extension Container {
 // MARK: Service Utilities
 
 extension Services {
-    internal func factories<P>(supporting protocol: P.Type) -> [ServiceFactory] {
+    internal func factories(supporting interface: Any.Type) -> [ServiceFactory] {
         return factories.filter { factory in
-            return factory.serviceType == P.self || factory.serviceSupports.contains(where: { $0 == P.self })
+            return factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface })
         }
     }
 }
