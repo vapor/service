@@ -1,5 +1,7 @@
-import XCTest
+import Async
+import Dispatch
 import Service
+import XCTest
 
 class ServiceTests: XCTestCase {
     func testHappyPath() throws {
@@ -7,7 +9,12 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(PrintLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = BasicContainer(
+            config: config,
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
+        )
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -20,7 +27,12 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = BasicContainer(
+            config: config,
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
+        )
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -34,11 +46,35 @@ class ServiceTests: XCTestCase {
         services.register(AllCapsLog.self)
 
         let foo = PrintLog()
-        services.register(foo, tag: "foo", supports: [Log.self])
+        services.instance(supports: [Log.self], tag: "foo", foo)
 
-        let container = TestContainer(config: config, services: services)
+        let container = BasicContainer(
+            config: config,
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
+        )
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
+    }
+    
+    func testTagDisambiguation() throws {
+        var config = Config()
+        config.prefer(ConfigurableLog.self, tagged: "foo1", for: Log.self)
+        
+        var services = Services()
+        services.register(Log.self, tag: "foo1") { _ -> ConfigurableLog in ConfigurableLog(config: "foo1") }
+        services.register(Log.self, tag: "foo2") { _ -> ConfigurableLog in ConfigurableLog(config: "foo2") }
+        
+        let container = BasicContainer(
+        	config: config,
+         	environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
+        )
+        let log = try container.make(Log.self, for: ServiceTests.self)
+        
+        XCTAssertEqual((log as? ConfigurableLog)?.myConfig, "foo1")
     }
 
     func testClient() throws {
@@ -49,7 +85,12 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = BasicContainer(
+            config: config,
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
+        )
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -60,7 +101,12 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = BasicContainer(
+            config: config,
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
+        )
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
     }
@@ -68,9 +114,14 @@ class ServiceTests: XCTestCase {
     func testProvider() throws {
         let config = Config()
         var services = Services()
-        try services.register(AllCapsProvider())
+        try services.provider(AllCapsProvider())
 
-        let container = TestContainer(config: config, services: services)
+        let container = BasicContainer(
+            config: config,
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
+        )
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
     }
@@ -82,17 +133,24 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
-        do {
-            _ = try container.make(Log.self, for: ServiceTests.self)
-            XCTFail("Should not have resolved.")
-        } catch {
-            print("\(error)")
-        }
+        let container = BasicContainer(
+            config: config,
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
+        )
+        XCTAssertThrowsError(_ = try container.make(Log.self, for: ServiceTests.self), "Should not have resolved")
     }
 
     static var allTests = [
         ("testHappyPath", testHappyPath),
+        ("testMultiple", testMultiple),
+        ("testTagged", testTagged),
+        ("testTagDisambiguation", testTagDisambiguation),
+        ("testClient", testClient),
+        ("testSpecific", testSpecific),
+        ("testProvider", testProvider),
+        ("testRequire", testRequire),
     ]
 }
 

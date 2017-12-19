@@ -1,5 +1,7 @@
-import XCTest
+import Async
+import Dispatch
 import Service
+import XCTest
 
 class ConfigTests: XCTestCase {
     /// Tests that BCryptConfig can be added as an instance
@@ -10,12 +12,13 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
 
         let bcryptConfig = BCryptConfig(cost: 4)
-        services.register(bcryptConfig)
+        services.instance(bcryptConfig)
 
-        let container = TestContainer(
-            environment: .production,
+        let container = BasicContainer(
             config: config,
-            services: services
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)
@@ -29,10 +32,11 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
         services.register(BCryptConfig.self)
 
-        let container = TestContainer(
-            environment: .production,
+        let container = BasicContainer(
             config: config,
-            services: services
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)
@@ -45,10 +49,11 @@ class ConfigTests: XCTestCase {
         var services = Services()
         services.register(BCryptHasher.self)
 
-        let container = TestContainer(
-            environment: .production,
+        let container = BasicContainer(
             config: config,
-            services: services
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
         )
 
         do {
@@ -66,14 +71,15 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
 
         let bcryptConfig4 = BCryptConfig(cost: 4)
-        services.register(bcryptConfig4)
+        services.instance(bcryptConfig4)
         let bcryptConfig5 = BCryptConfig(cost: 5)
-        services.register(bcryptConfig5)
+        services.instance(bcryptConfig5)
 
-        let container = TestContainer(
-            environment: .production,
+        let container = BasicContainer(
             config: config,
-            services: services
+            environment: .production,
+            services: services,
+            on: DispatchEventLoop(label: "unit-test")
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)
