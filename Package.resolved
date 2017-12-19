@@ -2,20 +2,20 @@
   "object": {
     "pins": [
       {
-        "package": "Core",
-        "repositoryURL": "https://github.com/vapor/core.git",
+        "package": "Async",
+        "repositoryURL": "https://github.com/vapor/async.git",
         "state": {
           "branch": "beta",
-          "revision": "861758854b20824d9a6fb33602f4d86a27124454",
+          "revision": "56996a77c45aea9b8e33628da70028991a98231e",
           "version": null
         }
       },
       {
-        "package": "Debugging",
-        "repositoryURL": "https://github.com/vapor/debugging.git",
+        "package": "Core",
+        "repositoryURL": "https://github.com/vapor/core.git",
         "state": {
           "branch": "beta",
-          "revision": "89546a5e14fe8224b6c41c0017f1c2dd1d7dbbbc",
+          "revision": "cde7317f7825f9fa1298a14279db7b522f0b83ef",
           "version": null
         }
       }
