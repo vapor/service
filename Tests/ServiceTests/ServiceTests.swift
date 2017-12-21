@@ -46,7 +46,7 @@ class ServiceTests: XCTestCase {
         services.register(AllCapsLog.self)
 
         let foo = PrintLog()
-        services.instance(supports: [Log.self], tag: "foo", foo)
+        services.use(foo, as: Log.self, tag: "foo")
 
         let container = BasicContainer(
             config: config,
@@ -114,7 +114,7 @@ class ServiceTests: XCTestCase {
     func testProvider() throws {
         let config = Config()
         var services = Services()
-        try services.provider(AllCapsProvider())
+        try services.register(AllCapsProvider())
 
         let container = BasicContainer(
             config: config,

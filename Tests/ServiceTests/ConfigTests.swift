@@ -12,7 +12,7 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
 
         let bcryptConfig = BCryptConfig(cost: 4)
-        services.instance(bcryptConfig)
+        services.use(bcryptConfig)
 
         let container = BasicContainer(
             config: config,
@@ -71,9 +71,9 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
 
         let bcryptConfig4 = BCryptConfig(cost: 4)
-        services.instance(bcryptConfig4)
+        services.use(bcryptConfig4)
         let bcryptConfig5 = BCryptConfig(cost: 5)
-        services.instance(bcryptConfig5)
+        services.use(bcryptConfig5)
 
         let container = BasicContainer(
             config: config,
