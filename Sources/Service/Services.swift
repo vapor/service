@@ -4,10 +4,12 @@ import Async
 public struct Services {
     var factories: [ServiceFactory]
     public internal(set) var providers: [Provider]
+    public internal(set) var supplements: [ServiceSupplement]
 
     public init() {
         self.factories = []
         self.providers = []
+        self.supplements = []
     }
 }
 
@@ -111,5 +113,41 @@ extension Services {
             return instance
         }
         self.register(factory)
+    }
+}
+
+// MARK: Supplement
+
+// Implementation note: Supplements are stored in a property on the Services
+// object rather than in a property on the individual ServiceFactory objects.
+// This choice was made to permit the "replace the existing service factory"
+// pattern to function without additionally wiping out the supplement closures
+// already added for the interface. It also avoids adding additional protocol
+// requirements to ServiceFactory.
+//
+// TODO: Is this desired behavior, or should replacing the factory also replace
+// the supplements?
+
+extension Services {
+    /// Adds a supplement type to the given Service type
+    public mutating func supplement(
+        _ interface: Any.Type,
+        tag: String? = nil,
+        with supplementSpecification: ServiceSupplement
+    ) {
+        supplements.append(supplementSpecification)
+    }
+    
+    /// Adds a supplement closure for the given Service type
+    public mutating func supplement<S>(
+        _ interface: Any.Type,
+        tag: String? = nil,
+        with closure: @escaping (inout S, Container) throws -> Void
+    ) {
+        let supplementSpec = BasicServiceSupplement(
+            tag: tag,
+            closure: closure
+        )
+        self.supplement(interface, with: supplementSpec)
     }
 }

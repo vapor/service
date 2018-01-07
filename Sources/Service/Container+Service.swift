@@ -70,6 +70,7 @@ extension Container {
         )
 
         // lazy loading
+        let supplements = services.supplements(for: chosen)
 
         if chosen.serviceIsSingleton {
             // attempt to fetch singleton from cache
@@ -77,7 +78,8 @@ extension Container {
                 return singleton
             } else {
                 do {
-                    let item = try chosen.makeService(for: self)
+                    var item = try chosen.makeService(for: self)
+                    try supplements.forEach { try $0.supplementService(&item, in: self) }
                     serviceCache.setSingleton(.service(item), type: chosen.serviceType)
                     return item
                 } catch {
@@ -87,7 +89,9 @@ extension Container {
             }
         } else {
             // create an instance of this service type.
-            return try chosen.makeService(for: self)
+            var item = try chosen.makeService(for: self)
+            try supplements.forEach { try $0.supplementService(&item, in: self) }
+            return item
         }
     }
 }
@@ -99,5 +103,10 @@ extension Services {
         return factories.filter { factory in
             return factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface })
         }
+    }
+    
+    internal func supplements(for factory: ServiceFactory) -> [ServiceSupplement] {
+        return supplements.filter { supplement in
+            return supplement.supplementedServiceType == factory.serviceType && supplement.supplementedServiceTag == factory.serviceTag }
     }
 }
