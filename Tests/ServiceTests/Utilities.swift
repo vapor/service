@@ -130,15 +130,19 @@ extension XCTestCase {
     open func invertedExpectation(description: String) -> XCTestExpectation {
         let result = expectation(description: description)
         
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
         result.isInverted = true
+#endif
         return result
     }
     
     open func countedExpectation(expecting: Int, description: String) -> XCTestExpectation {
         let result = expectation(description: description)
         
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
         result.expectedFulfillmentCount = expecting
         result.assertForOverFulfill = true
+#endif
         return result
     }
 }

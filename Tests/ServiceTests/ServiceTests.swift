@@ -147,11 +147,13 @@ class ServiceTests: XCTestCase {
 assert((ConfigurableLog(config: "test") as? AnyObject) == nil, "ConfigurableLog must be a value type for this test")
 #endif
 
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
         let expectation1 = self.countedExpectation(expecting: 2, description: "ConfigurableLog-specific supplement 1 should have run twice")
         let expectation2 = self.countedExpectation(expecting: 2, description: "ConfigurableLog-specific supplement 2 should have run twice")
         let expectation3 = self.countedExpectation(expecting: 1, description: "PrintLog-specific supplement should have run once")
         let expectation4 = self.invertedExpectation(description: "Generic supplement should not have run")
-        
+#endif
+
         var config = Config()
         var services = Services()
 
@@ -162,17 +164,25 @@ assert((ConfigurableLog(config: "test") as? AnyObject) == nil, "ConfigurableLog 
 
         services.supplement(ConfigurableLog.self) { (service: inout ConfigurableLog, _) in
             service.myConfig = "bar"
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
             expectation1.fulfill()
+#endif
         }
         services.supplement(ConfigurableLog.self) { (service: inout ConfigurableLog, _) in
             service.myConfig = "baz"
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
             expectation2.fulfill()
+#endif
         }
         services.supplement(PrintLog.self) { (service: inout PrintLog, _) in
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
             expectation3.fulfill()
+#endif
         }
         services.supplement(Log.self) { (service: inout Log, _) in
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
             expectation4.fulfill()
+#endif
         }
         
         let container = BasicContainer(
@@ -186,7 +196,9 @@ assert((ConfigurableLog(config: "test") as? AnyObject) == nil, "ConfigurableLog 
         let log2 = try container.make(Log.self, for: Log.self) // force it not to use the cache
         let _ = try container.make(PrintLog.self, for: ServiceTests.self) // The expectations do all the work on this one
 
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
         waitForExpectations(timeout: 0.0)
+#endif
 
         XCTAssertNotNil(log1 as? ConfigurableLog)
         XCTAssertEqual((log1 as! ConfigurableLog).myConfig, "baz", "Supplement's effects should be lasting on value types and run in registration order")
