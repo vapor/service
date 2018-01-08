@@ -143,9 +143,7 @@ class ServiceTests: XCTestCase {
     }
     
     func testSupplement() throws {
-#if os(Linux) // Currently asserts on macOS. Tracking as SR-???? (bugs.swift.org is down, will update when it comes up)
-assert((ConfigurableLog(config: "test") as? AnyObject) == nil, "ConfigurableLog must be a value type for this test")
-#endif
+        assert(!(type(of: ConfigurableLog(config: "test")) is AnyObject.Type), "ConfigurableLog must be a value type for this test") // See SR-6715
 
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
         let expectation1 = self.countedExpectation(expecting: 2, description: "ConfigurableLog-specific supplement 1 should have run twice")
