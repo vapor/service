@@ -20,7 +20,7 @@ extension Services {
         tag: String? = nil,
         isSingleton: Bool = false,
         factory: @escaping (Container) throws -> (S)
-    ) {
+    ) where S: Service {
         let factory = BasicServiceFactory(
             S.self,
             tag: tag,
@@ -38,7 +38,7 @@ extension Services {
         tag: String? = nil,
         isSingleton: Bool = false,
         factory: @escaping (Container) throws -> (S)
-    ) {
+    ) where S: Service {
         let factory = BasicServiceFactory(
             S.self,
             tag: tag,
@@ -63,7 +63,7 @@ extension Services {
     }
 
     /// Adds a service type to the Services.
-    public mutating func register<S: ServiceType>(_ type: S.Type = S.self) {
+    public mutating func register<S>(_ type: S.Type = S.self) where S: ServiceType {
         let factory = TypeServiceFactory(S.self)
         self.register(factory)
     }
@@ -73,7 +73,7 @@ extension Services {
 
 extension Services {
     /// Adds an initialized provider
-    public mutating func register<P: Provider>(_ provider: P) throws {
+    public mutating func register<P>(_ provider: P) throws where P: Provider {
         guard !providers.contains(where: { Swift.type(of: $0) == P.self }) else {
             return
         }
@@ -86,22 +86,22 @@ extension Services {
 
 extension Services {
     /// Adds an instance of a service to the Services.
-    public mutating func use<S>(
+    public mutating func register<S>(
         _ instance: S,
         as interface: Any.Type,
         tag: String? = nil,
         isSingleton: Bool = false
-    ) {
-        return self.use(instance, as: [interface], tag: tag, isSingleton: isSingleton)
+    ) where S: Service {
+        return self.register(instance, as: [interface], tag: tag, isSingleton: isSingleton)
     }
 
     /// Adds an instance of a service to the Services.
-    public mutating func use<S>(
+    public mutating func register<S>(
         _ instance: S,
         as supports: [Any.Type] = [],
         tag: String? = nil,
         isSingleton: Bool = false
-    ) {
+    ) where S: Service {
         let factory = BasicServiceFactory(
             S.self,
             tag: tag,
