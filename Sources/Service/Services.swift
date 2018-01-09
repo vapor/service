@@ -113,3 +113,28 @@ extension Services {
         self.register(factory)
     }
 }
+
+// MARK: Deprecated
+extension Services {
+    /// Adds an instance of a service to the Services.
+    @available(*, unavailable, renamed: "register")
+    public mutating func use<S>(
+        _ instance: S,
+        as interface: Any.Type,
+        tag: String? = nil,
+        isSingleton: Bool = false
+    ) where S: Service {
+        return self.register(instance, as: [interface], tag: tag, isSingleton: isSingleton)
+    }
+
+    /// Adds an instance of a service to the Services.
+    @available(*, unavailable, renamed: "register")
+    public mutating func use<S>(
+        _ instance: S,
+        as supports: [Any.Type] = [],
+        tag: String? = nil,
+        isSingleton: Bool = false
+    ) where S: Service {
+        return self.register(instance, as: supports, tag: tag, isSingleton: isSingleton)
+    }
+}
