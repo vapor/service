@@ -7,6 +7,33 @@ public protocol SubContainer: Container {
     var superContainer: Container { get }
 }
 
+extension SubContainer {
+    /// See Worker.eventLoop
+    public var eventLoop: EventLoop {
+        return superContainer.eventLoop
+    }
+
+    /// See Container.config
+    public var config: Config {
+        return superContainer.config
+    }
+
+    /// See Container.services
+    public var services: Services {
+        return superContainer.services
+    }
+
+    /// See Container.serviceCache
+    public var serviceCache: ServiceCache {
+        return superContainer.serviceCache
+    }
+
+    /// See Container.environment
+    public var environment: Environment {
+        return superContainer.environment
+    }
+}
+
 /// A basic container
 public final class BasicSubContainer: SubContainer {
     /// See Container.config
