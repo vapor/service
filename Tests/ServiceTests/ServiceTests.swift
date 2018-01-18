@@ -46,7 +46,7 @@ class ServiceTests: XCTestCase {
         services.register(AllCapsLog.self)
 
         let foo = PrintLog()
-        services.use(foo, as: Log.self, tag: "foo")
+        services.register(foo, as: Log.self, tag: "foo")
 
         let container = BasicContainer(
             config: config,

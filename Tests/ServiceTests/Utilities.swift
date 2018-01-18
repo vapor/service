@@ -8,7 +8,7 @@ protocol Log {
     func log(_ string: String)
 }
 
-class PrintLog: Log {
+class PrintLog: Log, Service {
     func log(_ string: String) {
         print("[Print Log] \(string)")
     }
@@ -38,7 +38,7 @@ extension AllCapsLog: ServiceType {
 }
 
 
-struct ConfigurableLog: Log {
+struct ConfigurableLog: Log, Service {
     var myConfig: String
     
     init(config: String) {
@@ -96,7 +96,7 @@ extension BCryptHasher: ServiceType {
 
 
 
-struct BCryptConfig {
+struct BCryptConfig: Service {
     let cost: Int
     init(cost: Int) {
         self.cost = cost
