@@ -88,14 +88,13 @@ internal struct InterfaceIdentifier: Hashable {
         return lhs.interface == rhs.interface
     }
 
-    var hashValue: Int {
-        return interface.hashValue
-    }
+    let hashValue: Int
 
     private let interface: ObjectIdentifier
 
     public init(interface: Any.Type) {
         self.interface = ObjectIdentifier(interface)
+        self.hashValue = self.interface.hashValue
     }
 }
 
@@ -105,9 +104,7 @@ internal struct InterfaceClientIdentifier: Hashable {
         return lhs.client == rhs.client && lhs.interface == rhs.interface
     }
 
-    var hashValue: Int {
-        return interface.hashValue &+ client.hashValue
-    }
+    let hashValue: Int
 
     private let interface: ObjectIdentifier
     private let client: ObjectIdentifier
@@ -115,5 +112,8 @@ internal struct InterfaceClientIdentifier: Hashable {
     public init<Interface, Client>(interface: Interface.Type, client: Client.Type) {
         self.interface = ObjectIdentifier(Interface.self)
         self.client = ObjectIdentifier(Client.self)
+        
+        // * 3 is important so that switching the interface and client doesn't provide the same identifier hash
+        self.hashValue = self.interface.hashValue &+ (self.client.hashValue &* 3)
     }
 }

@@ -16,9 +16,16 @@ public protocol ServiceType {
     static func makeService(for worker: Container) throws -> Self
 }
 
+/// MARK: Optional
+
 extension ServiceType {
-    /// See ServiceType.serviceIsSingleton
+    /// See `ServiceType.serviceIsSingleton`
     public static var serviceIsSingleton: Bool {
         return false
+    }
+
+    /// See `ServiceType.serviceSupports`
+    public static var serviceSupports: [Any.Type] {
+        return []
     }
 }

@@ -99,10 +99,14 @@ extension Container {
 // MARK: Service Utilities
 
 extension Services {
-    internal func factories(supporting interface: Any.Type) -> [ServiceFactory] {
-        return factories.filter { factory in
-            return factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface })
+    fileprivate func factories(supporting interface: Any.Type) -> [ServiceFactory] {
+        var factories = [ServiceFactory]()
+        
+        for factory in self.factories where factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface }) {
+            factories.append(factory)
         }
+        
+        return factories
     }
     
     internal func supplements(for factory: ServiceFactory) -> [ServiceSupplement] {
