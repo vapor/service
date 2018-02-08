@@ -83,28 +83,31 @@ internal enum ResolvedService {
 }
 
 /// hashable struct for an interface type
-internal struct InterfaceIdentifier: Hashable {
+internal struct InterfaceIdentifier: Hashable, CustomDebugStringConvertible {
     static func ==(lhs: InterfaceIdentifier, rhs: InterfaceIdentifier) -> Bool {
         return lhs.interface == rhs.interface
     }
 
     let hashValue: Int
+    let debugDescription: String
 
     private let interface: ObjectIdentifier
 
     public init(interface: Any.Type) {
         self.interface = ObjectIdentifier(interface)
         self.hashValue = self.interface.hashValue
+        self.debugDescription = "ServiceIdentifier(\(interface))"
     }
 }
 
 /// hashable struct for a client and interface type.
-internal struct InterfaceClientIdentifier: Hashable {
+internal struct InterfaceClientIdentifier: Hashable, CustomDebugStringConvertible {
     static func ==(lhs: InterfaceClientIdentifier, rhs: InterfaceClientIdentifier) -> Bool {
         return lhs.client == rhs.client && lhs.interface == rhs.interface
     }
 
     let hashValue: Int
+    let debugDescription: String
 
     private let interface: ObjectIdentifier
     private let client: ObjectIdentifier
@@ -115,5 +118,37 @@ internal struct InterfaceClientIdentifier: Hashable {
         
         // * 3 is important so that switching the interface and client doesn't provide the same identifier hash
         self.hashValue = self.interface.hashValue &+ (self.client.hashValue &* 3)
+        self.debugDescription = "ServiceIdentifier(\(interface) for \(client))"
+    }
+}
+
+/// debug string conformance
+extension ServiceCache: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        var result = ""
+        
+        result += "Instanced services:\n" + services.reduce("") { $0 + "    \($1.key.debugDescription) - \($1.value.debugDescription)\n" }
+        result += "Singletons:\n" + singletons.reduce("") { $0 + "    \($1.key.debugDescription) - \($1.value.debugDescription)\n" }
+        return result
+    }
+}
+
+/// debug string conformance
+extension ResolvedService: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        switch self {
+        case .error(let error): return "ERROR:\(error)"
+        case .service(let service):
+            if type(of: service) is AnyObject.Type {
+#if os(Linux)
+                let oid = ObjectIdentifier(service as! AnyObject)
+#else
+                let oid = ObjectIdentifier(service as AnyObject)
+#endif
+                return "\(String(describing: service)); \(oid)"
+            } else {
+                return "\(String(describing: service)); \(ObjectIdentifier(type(of: service)))"
+            }
+        }
     }
 }
