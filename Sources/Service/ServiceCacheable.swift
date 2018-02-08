@@ -47,25 +47,27 @@ public final class ServiceCache {
 
     /// Gets the cached service if it is a singleton.
     /// - throws if the service was cached as an error
-    internal func getSingleton(
-        _ service: Any.Type
-    ) throws -> Any? {
+    internal func getSingleton<Interface>(
+        _ service: Interface.Type
+    ) throws -> Interface? {
         let key = InterfaceIdentifier(interface: service)
         guard let resolved = singletons[key] else {
             return nil
         }
+        let result = try resolved.resolve() as! Interface
 
-        return try resolved.resolve()
+        return result
     }
 
     /// internal method for setting cache based on ResolvedService enum.
-    internal func setSingleton(
+    internal func setSingleton<Interface>(
         _ resolved: ResolvedService,
-        type serviceType: Any.Type
+        type serviceType: Interface.Type
     ) {
         let key = InterfaceIdentifier(interface: serviceType)
         singletons[key] = resolved
     }
+    
 }
 
 /// a resolved service, either error or the service
@@ -93,8 +95,8 @@ internal struct InterfaceIdentifier: Hashable, CustomDebugStringConvertible {
 
     private let interface: ObjectIdentifier
 
-    public init(interface: Any.Type) {
-        self.interface = ObjectIdentifier(interface)
+    public init<Interface>(interface: Interface.Type) {
+        self.interface = ObjectIdentifier(Interface.self)
         self.hashValue = self.interface.hashValue
         self.debugDescription = "ServiceIdentifier(\(interface))"
     }
