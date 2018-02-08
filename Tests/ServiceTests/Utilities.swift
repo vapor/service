@@ -56,6 +56,14 @@ class AllCapsProvider: Provider {
     func boot(_ container: Container) throws { }
 }
 
+struct NotAClassService: Service {
+    static private var counter = 0
+    
+    let counter: Int = { NotAClassService.counter += 1; return NotAClassService.counter }()
+}
+
+class MoreOfAClassService: Service {}
+
 // MARK: BCrypt
 
 protocol Hasher {
