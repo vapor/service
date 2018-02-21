@@ -55,7 +55,14 @@ extension Container {
         } else if available.count == 0 {
             // no services are available matching
             // the type requested.
-            throw ServiceError(.noneAvailable(type: interface))
+            throw ServiceError(
+                identifier: "make",
+                reason: "No services available for \(interface)",
+                suggestedFixes: [
+                    "Register a service for \(interface).",
+                    "`services.register(\(interface).self) { ... }`."
+                ]
+            )
         } else {
             // only one service matches, no need to disambiguate.
             // let's use it!
@@ -69,25 +76,18 @@ extension Container {
             neededBy: client
         )
 
-        // lazy loading
-
-        if chosen.serviceIsSingleton {
-            // attempt to fetch singleton from cache
-            if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
-                return singleton
-            } else {
-                do {
-                    let item = try chosen.makeService(for: self)
-                    serviceCache.setSingleton(.service(item), type: chosen.serviceType)
-                    return item
-                } catch {
-                    serviceCache.setSingleton(.error(error), type: chosen.serviceType)
-                    throw error
-                }
-            }
+        // attempt to fetch singleton from cache
+        if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
+            return singleton
         } else {
-            // create an instance of this service type.
-            return try chosen.makeService(for: self)
+            do {
+                let item = try chosen.makeService(for: self)
+                serviceCache.setSingleton(.service(item), type: chosen.serviceType)
+                return item
+            } catch {
+                serviceCache.setSingleton(.error(error), type: chosen.serviceType)
+                throw error
+            }
         }
     }
 }

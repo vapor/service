@@ -11,7 +11,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/async.git", "1.0.0-beta.1"..<"1.0.0-beta.2"),
 
         // A library to aid Vapor users with better debugging around the framework
-        .package(url: "https://github.com/vapor/core.git", "3.0.0-beta.1"..<"3.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/core.git", "3.0.0-beta.2"..<"3.0.0-beta.3"),
     ],
     targets: [
         .target(name: "Service", dependencies: ["Async", "Debugging"]),
