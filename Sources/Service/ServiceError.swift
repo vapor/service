@@ -1,6 +1,5 @@
 import Foundation
 import Debugging
-import Security
 
 /// An error using Services.
 public struct ServiceError: Debuggable {
