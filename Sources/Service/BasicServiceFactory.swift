@@ -9,10 +9,6 @@ public struct BasicServiceFactory: ServiceFactory {
 
     /// See ServiceFactory.serviceTag
     public var serviceTag: String?
-
-    /// See ServiceFactory.serviceIsSingleton
-    public var serviceIsSingleton: Bool
-
     /// Accepts a container and worker, returning an
     /// initialized service.
     public typealias ServiceFactoryClosure = (Container) throws -> Any
@@ -25,13 +21,11 @@ public struct BasicServiceFactory: ServiceFactory {
         _ type: Any.Type,
         tag: String?,
         supports interfaces: [Any.Type],
-        isSingleton: Bool,
         factory closure: @escaping ServiceFactoryClosure
     ) {
         self.serviceType = type
         self.serviceTag = tag
         self.serviceSupports = interfaces
-        self.serviceIsSingleton = isSingleton
         self.closure = closure
     }
 

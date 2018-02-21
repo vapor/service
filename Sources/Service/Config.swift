@@ -42,7 +42,13 @@ public struct Config {
         let specific = ServiceIdentifier(interface: interface, client: client)
         let all = ServiceIdentifier(interface: interface, client: nil)
         guard let preference = preferences[specific] ?? preferences[all] else {
-            throw ServiceError(.other(identifier: "invalid-interface", reason: "Please choose which \(interface) you prefer, multiple are available: \(available.readable)"))
+            throw ServiceError(
+                identifier: "ambiguity",
+                reason: "Please choose which \(interface) you prefer, multiple are available: \(available.readable).",
+                suggestedFixes: available.map { service in
+                    return "`config.prefer(\(service.serviceType).self, for: \(interface).self)`."
+                }
+            )
         }
 
         let chosen = available.filter { factory in
@@ -57,9 +63,15 @@ public struct Config {
 
         guard chosen.count == 1 else {
             if chosen.count < 1 {
-                throw ServiceError(.other(identifier: "invalid-tag", reason: "No service \(preference.type) (\(preference.tag ?? "*")) has been registered for \(interface)."))
+                throw ServiceError(
+                    identifier: "tag",
+                    reason: "No service \(preference.type) (\(preference.tag ?? "*")) has been registered for \(interface)."
+                )
             } else {
-                throw ServiceError(.other(identifier: "multiple-matching-tag", reason: "Too many services were found mathcing this tag"))
+                throw ServiceError(
+                    identifier: "tags",
+                    reason: "Too many services were found mathcing this tag."
+                )
             }
 
         }
@@ -80,12 +92,18 @@ public struct Config {
         }
 
         guard requirement.type == chosen.serviceType else {
-            throw ServiceError(.other(identifier: "type-not-required", reason: "\(interface) \(chosen.serviceType) is not required type \(requirement.type)."))
+            throw ServiceError(
+                identifier: "typeRequirement",
+                reason: "\(interface) \(chosen.serviceType) is not required type \(requirement.type)."
+            )
         }
 
         if let tag = requirement.tag {
             guard chosen.serviceTag == tag else {
-                throw ServiceError(.other(identifier: "tag-not-matching", reason: "\(chosen.serviceType) tag \(chosen.serviceTag ?? "none") does not equal \(tag)"))
+                throw ServiceError(
+                    identifier: "tagRequirement",
+                    reason: "\(chosen.serviceType) tag \(chosen.serviceTag ?? "none") does not equal \(tag)"
+                )
             }
         }
     }

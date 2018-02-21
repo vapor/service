@@ -17,7 +17,6 @@ public final class ServiceCache {
         self.singletons = [:]
     }
 
-
     /// Gets the cached service if one exists.
     /// - throws if the service was cached as an error
     internal func get<Interface, Client>(
