@@ -60,7 +60,7 @@ class ConfigTests: XCTestCase {
             _ = try container.make(Hasher.self, for: ConfigTests.self)
             XCTFail("No error thrown")
         } catch let error as ServiceError {
-            XCTAssertEqual(error.reason, "No services are available for 'BCryptConfig'")
+            XCTAssertEqual(error.reason, "No services are available for 'BCryptConfig'.")
         }
     }
 
