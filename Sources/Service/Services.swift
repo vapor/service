@@ -54,8 +54,14 @@ extension Services {
     public mutating func register(_ factory: ServiceFactory) {
         if let existing = factories.index(where: {
             $0.serviceType == factory.serviceType &&
-                $0.serviceTag == factory.serviceTag
+            $0.serviceTag == factory.serviceTag
         }) {
+            //print("WARNING: The \(factory.serviceType):\(factory.serviceTag ?? "any") service has been registered more than once. Only the last registration counts.")
+            
+            if factories[existing].serviceIsSingleton != factory.serviceIsSingleton {
+                print("WARNING: You have registered the \(factory.serviceType) service both as singleton and as instanced. Only the last registration counts. This probably isn't what you wanted!")
+            }
+            
             factories[existing] = factory
         } else {
             factories.append(factory)

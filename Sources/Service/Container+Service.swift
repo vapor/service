@@ -13,16 +13,27 @@ extension Container {
         // check if we've previously resolved this service
         if let service = try serviceCache.get(Interface.self, for: Client.self) {
             return service
+        } else if let service = try serviceCache.getSingleton(Interface.self) {
+            return service
         }
+        
+        let factory = try unsafeMake(Interface.self, for: Client.self)
 
         do {
-            // resolve the service and cache it
-            let service = try unsafeMake(Interface.self, for: Client.self) as! Interface
-            serviceCache.set(.service(service), Interface.self, for: Client.self)
-            return service
+            let service = try factory.makeService(for: self)
+            
+            if factory.serviceIsSingleton {
+                serviceCache.setSingleton(.service(service), type: Interface.self)
+            } else {
+                serviceCache.set(.service(service), Interface.self, for: Client.self)
+            }
+            return service as! Interface
         } catch {
-            // cache the error
-            serviceCache.set(.error(error), Interface.self, for: Client.self)
+            if factory.serviceIsSingleton {
+                serviceCache.setSingleton(.error(error), type: Interface.self)
+            } else {
+                serviceCache.set(.error(error), Interface.self, for: Client.self)
+            }
             throw error
         }
     }
@@ -37,7 +48,7 @@ extension Container {
     internal func unsafeMake(
         _ interface: Any.Type,
         for client: Any.Type
-    ) throws -> Any {
+    ) throws -> ServiceFactory {
         // find all available service types that match the requested type.
         let available = services.factories(supporting: interface)
 
@@ -70,25 +81,7 @@ extension Container {
         )
 
         // lazy loading
-
-        if chosen.serviceIsSingleton {
-            // attempt to fetch singleton from cache
-            if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
-                return singleton
-            } else {
-                do {
-                    let item = try chosen.makeService(for: self)
-                    serviceCache.setSingleton(.service(item), type: chosen.serviceType)
-                    return item
-                } catch {
-                    serviceCache.setSingleton(.error(error), type: chosen.serviceType)
-                    throw error
-                }
-            }
-        } else {
-            // create an instance of this service type.
-            return try chosen.makeService(for: self)
-        }
+        return chosen
     }
 }
 
