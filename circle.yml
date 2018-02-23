@@ -13,10 +13,9 @@ jobs:
       - image: norionomura/swift:swift-4.1-branch
     steps:
       - checkout
-      - run: apt-get update
-      - run: apt-get install -yq libssl-dev
       - run: swift build
       - run: swift test
+      - run: swift build -c release
 workflows:
   version: 2
   tests:
