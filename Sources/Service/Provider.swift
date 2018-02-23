@@ -1,5 +1,3 @@
-import Configs
-
 /// Providers allow external projects to be easily
 /// integrated into an application's service container.
 ///
@@ -7,7 +5,7 @@ import Configs
 ///
 ///The Provider should take care of setting up any
 ///necessary configurations on itself and the container.
-public protocol Provider: ConfigInitializable {
+public protocol Provider {
     /// This should be the name of the actual repository
     /// that contains the Provider.
     /// 
@@ -33,7 +31,7 @@ public protocol Provider: ConfigInitializable {
     func register(_ services: inout Services) throws
 
     /// Called after the container has initialized.
-    func boot(_ container: Container) throws
+    func boot(_ worker: Container) throws
 }
 
 // MARK: Optional

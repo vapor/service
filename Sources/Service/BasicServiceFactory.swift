@@ -1,28 +1,36 @@
-public struct BasicServiceFactory: ServiceFactory {
-    public typealias ServiceFactoryClosure = (Container) throws -> Any?
+import Async
 
+public struct BasicServiceFactory: ServiceFactory {
+    /// See ServiceFactory.serviceType
     public let serviceType: Any.Type
-    public let serviceName: String
-    public let serviceIsSingleton: Bool
+
+    /// See ServiceFactory.serviceSupports
     public var serviceSupports: [Any.Type]
 
+    /// See ServiceFactory.serviceTag
+    public var serviceTag: String?
+    /// Accepts a container and worker, returning an
+    /// initialized service.
+    public typealias ServiceFactoryClosure = (Container) throws -> Any
+
+    /// Closure that constructs the service
     public let closure: ServiceFactoryClosure
 
+    /// Create a new basic service factoryl.
     public init(
-        _ serviceType: Any.Type,
-        name: String,
-        supports: [Any.Type],
-        isSingleton: Bool,
+        _ type: Any.Type,
+        tag: String?,
+        supports interfaces: [Any.Type],
         factory closure: @escaping ServiceFactoryClosure
     ) {
-        self.serviceType = serviceType
-        self.serviceName = name
-        self.serviceSupports = supports
-        self.serviceIsSingleton = isSingleton
+        self.serviceType = type
+        self.serviceTag = tag
+        self.serviceSupports = interfaces
         self.closure = closure
     }
 
-    public func makeService(for container: Container) throws -> Any? {
-        return try closure(container)
+    /// See ServiceFactory.makeService
+    public func makeService(for worker: Container) throws -> Any {
+        return try closure(worker)
     }
 }

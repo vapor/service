@@ -1,225 +1,93 @@
+import Async
 import Foundation
 
-private let serviceCacheKey = "service:serviceCache"
-
 extension Container {
-    /// Makes all available services for the given type.
-    ///
-    /// If a protocol is supplied, all services conforming
-    /// to the protocol will be returned.
-    ///
-    /// Service type names that appear in the `container.json` file
-    /// will be return in the results.
-    ///
-    /// The following example will initialize three service
-    /// types matching the names "error", "date", and "file".
-    ///
-    ///     `Config/app.json`
-    ///     { "middleware": ["error", "date", "file"] }
-    ///
-    /// The ordering from the config array is respected.
-    ///
-    /// Manually setting config also works.
-    ///
-    ///     try config.set("container.middleware", [
-    ///         "error", "date", "file"
-    ///     ])
-    ///     let drop = try Application(config, ...)
-    ///
-    /// Any service instances matching this type will be
-    /// appended to the end of the results.
-    ///
-    public func make<Type>(_ type: [Type.Type] = [Type.self]) throws -> [Type] {
-        // create a readable key name for this service type
-        // this will be used in the config
-        // for example, `ConsoleProtocol` -> `console`
-        var typeName = makeTypeName(Type.self)
-        if typeName != "middleware" {
-            typeName += "s"
-        }
-
-        // create a key name for caching the result
-        // the make array always caches
-        let keyName = "array-\(typeName)"
-
-        // check to see if we already have a cached result
-        if let existing = serviceCache[keyName] as? [Type] {
-            return existing
-        }
-
-        // find all available service types
-        let availableServices = services.factories(supporting: Type.self)
-
-        // get the array of services specified in config
-        // for this type.
-        // if no services are specified, return only instances.
-        guard let chosen = config[Self.configKey, typeName]?.array?.flatMap({ $0.string }) else {
-            return []
-        }
-
-        // loop over chosen service names from config
-        // and convert to ServiceTypes from the Services struct.
-        let chosenServices: [ServiceFactory] = try chosen.map { chosenName in
-            // resolve services matching the supplied name
-            let resolvedServices: [ServiceFactory] = availableServices.flatMap { availableService in
-                guard availableService.serviceName == chosenName else {
-                    return nil
-                }
-
-                return availableService
-            }
-
-            if resolvedServices.count > 1 {
-                // multiple services have the same name
-                // this is bad.
-                throw ServiceError.duplicateServiceName(
-                    name: chosenName,
-                    type: Type.self
-                )
-            } else if resolvedServices.count == 0 {
-                // no services were found that have this name.
-                throw ServiceError.unknownService(
-                    name: chosenName,
-                    available: availableServices.map({ $0.serviceName }),
-                    type: Type.self
-                )
-            } else {
-                // the service they wanted was found!
-                return resolvedServices[0]
-            }
-        }
-
-        // lazy loading
-        // initialize all of the requested services type.
-        // then append onto that the already intialized service instances.
-        let array = try chosenServices.flatMap { chosenService in
-            return try _makeServiceFactoryConsultingCache(chosenService, ofType: Type.self)
-        }
-
-        // cache the result
-        serviceCache[keyName] = array
-
-        return array
-    }
-
     /// Returns or creates a service for the given type.
     ///
     /// If a protocol is supplied, a service conforming
     /// to the protocol will be returned.
-    ///
-    /// If multiple available services conform to the 
-    /// supplied protocol, you will need to disambiguate in
-    /// the App's configuration.
-    ///
-    /// This can be done using config files:
-    ///
-    ///     `Config/app.json`
-    ///     { "client": "engine" }
-    ///
-    /// Disambiguation can also be done manually:
-    ///
-    ///     try config.set("app.client", "engine")
-    ///     let drop = try App(config, ...)
-    ///
-    public func make<Type>(_ type: Type.Type = Type.self) throws -> Type {
-        // generate a readable name from the type for config
-        // ex: `ConsoleProtocol` -> 'console'
-        let typeName = makeTypeName(Type.self)
+    public func make<Interface, Client>(
+        _ interface: Interface.Type = Interface.self,
+        for client: Client.Type
+    ) throws -> Interface {
+        // check if we've previously resolved this service
+        if let service = try serviceCache.get(Interface.self, for: Client.self) {
+            return service
+        }
 
+        do {
+            // resolve the service and cache it
+            let service = try unsafeMake(Interface.self, for: Client.self) as! Interface
+            serviceCache.set(.service(service), Interface.self, for: Client.self)
+            return service
+        } catch {
+            // cache the error
+            serviceCache.set(.error(error), Interface.self, for: Client.self)
+            throw error
+        }
+    }
+
+    /// Returns or creates a service for the given type.
+    /// If the service has already been requested once,
+    /// the previous result for the interface and client is returned.
+    ///
+    /// This method accepts and returns Any.
+    ///
+    /// Use .make() for the safe method.
+    internal func unsafeMake(
+        _ interface: Any.Type,
+        for client: Any.Type
+    ) throws -> Any {
         // find all available service types that match the requested type.
-        let available = services.factories(supporting: Type.self)
+        let available = services.factories(supporting: interface)
 
         let chosen: ServiceFactory
 
         if available.count > 1 {
             // multiple services are available,
             // we will need to disambiguate
-            guard let disambiguation = config[Self.configKey, typeName]?.string else {
-                // no dismabiguating configuration was given. 
-                // we are unable to choose which service to use.
-                throw ServiceError.disambiguationRequired(
-                    key: typeName,
-                    available: available.flatMap({ $0.serviceName }),
-                    type: Type.self
-                )
-            }
-
-            // turn the disambiguated type name into a ServiceType
-            // from the available service types.
-            let disambiguated: [ServiceFactory] = available.flatMap { service in
-                guard disambiguation == service.serviceName else {
-                    return nil
-                }
-                return service
-            }
-
-            if disambiguated.count > 1 {
-                // multiple service types were found with the same name.
-                // this is bad.
-                throw ServiceError.duplicateServiceName(
-                    name: disambiguation,
-                    type: Type.self
-                )
-            } else if disambiguated.count == 0 {
-                // no services were found that matched the supplied name.
-                // we are uanble to choose which service to use.
-                throw ServiceError.unknownService(
-                    name: disambiguation,
-                    available: available.flatMap({ $0.serviceName }),
-                    type: Type.self
-                )
-            } else {
-                // the desired service was found, use it!
-                chosen = disambiguated.first!
-            }
+            chosen = try config.choose(
+                from: available,
+                interface: interface,
+                for: self,
+                neededBy: client
+            )
         } else if available.count == 0 {
             // no services are available matching
             // the type requested.
-            throw ServiceError.noneAvailable(type: Type.self)
+            throw ServiceError(
+                identifier: "make",
+                reason: "No services are available for '\(interface)'.",
+                suggestedFixes: [
+                    "Register a service for '\(interface)'.",
+                    "`services.register(\(interface).self) { ... }`."
+                ]
+            )
         } else {
             // only one service matches, no need to disambiguate.
             // let's use it!
-            chosen = available.first!
+            chosen = available[0]
         }
 
-        // lazy loading
-        // create an instance of this service type.
-        let item = try _makeServiceFactoryConsultingCache(chosen, ofType: Type.self)
+        try config.approve(
+            chosen: chosen,
+            interface: interface,
+            for: self,
+            neededBy: client
+        )
 
-        return item!
-    }
-
-    fileprivate func _makeServiceFactoryConsultingCache<T>(
-        _ serviceFactory: ServiceFactory, ofType: T.Type
-    ) throws -> T? {
-        let key = "\(serviceFactory.serviceType)-\(serviceFactory.serviceName)"
-        if serviceFactory.serviceIsSingleton {
-            if let cached = serviceCache[key] as? T {
-                return cached
+        // attempt to fetch singleton from cache
+        if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
+            return singleton
+        } else {
+            do {
+                let item = try chosen.makeService(for: self)
+                serviceCache.setSingleton(.service(item), type: chosen.serviceType)
+                return item
+            } catch {
+                serviceCache.setSingleton(.error(error), type: chosen.serviceType)
+                throw error
             }
-        }
-
-        guard let new = try serviceFactory.makeService(for: self) as? T? else {
-            throw ServiceError.incorrectType(
-                name: serviceFactory.serviceName,
-                type: serviceFactory.serviceType,
-                desired: T.self
-            )
-        }
-
-        if serviceFactory.serviceIsSingleton {
-            serviceCache[key] = new
-        }
-
-        return new
-    }
-
-    fileprivate var serviceCache: [String: Any] {
-        get {
-            return extend[serviceCacheKey] as? [String: Any] ?? [:]
-        }
-        set {
-            extend[serviceCacheKey] = newValue
         }
     }
 }
@@ -227,31 +95,13 @@ extension Container {
 // MARK: Service Utilities
 
 extension Services {
-    internal func factories<P>(supporting protocol: P.Type) -> [ServiceFactory] {
-        return factories.filter { factory in
-            return factory.serviceType == P.self || factory.serviceSupports.contains(where: { $0 == P.self })
+    fileprivate func factories(supporting interface: Any.Type) -> [ServiceFactory] {
+        var factories = [ServiceFactory]()
+        
+        for factory in self.factories where factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface }) {
+            factories.append(factory)
         }
+        
+        return factories
     }
-}
-
-// MARK: Utilities
-
-private var typeNameCache: [String: String] = [:]
-
-private func makeTypeName<T>(_ any: T.Type) -> String {
-    let rawTypeString = "\(T.self)"
-    if let cached = typeNameCache[rawTypeString] {
-        return cached
-    }
-
-    let formattedTypename = rawTypeString
-        .replacingOccurrences(of: "Protocol", with: "")
-        .replacingOccurrences(of: "Factory", with: "")
-        .replacingOccurrences(of: "Renderer", with: "")
-        .splitUppercaseCharacters()
-        .joined(separator: "-")
-        .lowercased()
-
-    typeNameCache[rawTypeString] = formattedTypename
-    return formattedTypename
 }

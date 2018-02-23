@@ -1,7 +1,9 @@
+import Async
+
 /// Services available for a service container.
 public struct Services {
     var factories: [ServiceFactory]
-    var providers: [ProviderFactory]
+    public internal(set) var providers: [Provider]
 
     public init() {
         self.factories = []
@@ -9,62 +11,98 @@ public struct Services {
     }
 }
 
-// MARK: Services
+// MARK: Factory
 
 extension Services {
-    /// Adds a service type to the Services.
-    public mutating func register<S: ServiceType>(_ type: S.Type = S.self) {
-        let factory = TypeServiceFactory(S.self)
-        self.factory(factory)
+    /// Adds a closure based service factory
+    public mutating func register<S>(
+        _ supports: [Any.Type] = [],
+        tag: String? = nil,
+        factory: @escaping (Container) throws -> (S)
+    ) where S: Service {
+        let factory = BasicServiceFactory(
+            S.self,
+            tag: tag,
+            supports: supports
+        ) { worker in
+            try factory(worker)
+        }
+        self.register(factory)
     }
 
-    /// Adds an instance of a service to the Services.
-    public mutating func instance<S>(
-        _ instance: S,
-        name: String,
-        supports: [Any.Type],
-        isSingleton: Bool = true
-    ) {
-        let factory = BasicServiceFactory(S.self, name: name, supports: supports, isSingleton: isSingleton) { drop in
-            return instance
+    /// Adds a closure based service factory
+    public mutating func register<S>(
+        _ interface: Any.Type,
+        tag: String? = nil,
+        factory: @escaping (Container) throws -> (S)
+    ) where S: Service {
+        let factory = BasicServiceFactory(
+            S.self,
+            tag: tag,
+            supports: [interface]
+        ) { worker in
+            try factory(worker)
         }
-        self.factory(factory)
+        self.register(factory)
     }
 
     /// Adds any type conforming to ServiceFactory
-    public mutating func factory(_ factory: ServiceFactory) {
-        guard !factories.contains(where: {
-            $0.serviceType == factory.serviceType && $0.serviceName == factory.serviceName
-        }) else {
-            return
+    public mutating func register(_ factory: ServiceFactory) {
+        if let existing = factories.index(where: {
+            $0.serviceType == factory.serviceType &&
+                $0.serviceTag == factory.serviceTag
+        }) {
+            factories[existing] = factory
+        } else {
+            factories.append(factory)
         }
-        
-        factories.append(factory)
+    }
+
+    /// Adds a service type to the Services.
+    public mutating func register<S>(_ type: S.Type = S.self) where S: ServiceType {
+        let factory = TypeServiceFactory(S.self)
+        self.register(factory)
     }
 }
 
-// MARK: Provider
+/// MARK: Provider
 
 extension Services {
-    /// Adds a Provider type to the Services.
-    public mutating func provider<P: Provider>(_ p: P.Type) {
-        let factory = TypeProviderFactory(P.self)
-        self.provider(factory)
-    }
-
-    /// Adds a Provider to the Services.
-    public mutating func provider<P: Provider>(_ p: P) {
-        let factory = BasicProviderFactory(P.self) { config in
-            return p
-        }
-        self.provider(factory)
-    }
-
-    public mutating func provider(_ factory: ProviderFactory) {
-        guard !providers.contains(where: { $0.providerType == factory.providerType }) else {
+    /// Adds an initialized provider
+    public mutating func register<P>(_ provider: P) throws where P: Provider {
+        guard !providers.contains(where: { Swift.type(of: $0) == P.self }) else {
             return
         }
+        try provider.register(&self)
+        providers.append(provider)
+    }
+}
 
-        providers.append(factory)
+// MARK: Instance
+
+extension Services {
+    /// Adds an instance of a service to the Services.
+    public mutating func register<S>(
+        _ instance: S,
+        as interface: Any.Type,
+        tag: String? = nil
+    ) where S: Service {
+        return self.register(instance, as: [interface], tag: tag)
+    }
+
+    /// Adds an instance of a service to the Services.
+    public mutating func register<S>(
+        _ instance: S,
+        as supports: [Any.Type] = [],
+        tag: String? = nil
+    ) where S: Service {
+        let factory = BasicServiceFactory(
+            S.self,
+            tag: tag,
+            supports: supports
+        ) { container in
+            return instance
+        }
+        self.register(factory)
     }
 }
