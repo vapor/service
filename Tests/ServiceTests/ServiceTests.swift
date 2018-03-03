@@ -9,11 +9,11 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(PrintLog.self)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
@@ -27,11 +27,11 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
@@ -48,11 +48,11 @@ class ServiceTests: XCTestCase {
         let foo = PrintLog()
         services.register(foo, as: Log.self, tag: "foo")
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
@@ -66,11 +66,11 @@ class ServiceTests: XCTestCase {
         services.register(Log.self, tag: "foo1") { _ -> ConfigurableLog in ConfigurableLog(config: "foo1") }
         services.register(Log.self, tag: "foo2") { _ -> ConfigurableLog in ConfigurableLog(config: "foo2") }
         
-        let container = try BasicContainer(
+        let container = BasicContainer(
         	config: config,
          	environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
         let log = try container.make(Log.self, for: ServiceTests.self)
         
@@ -85,11 +85,11 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
@@ -101,11 +101,11 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
@@ -116,11 +116,11 @@ class ServiceTests: XCTestCase {
         var services = Services()
         try services.register(AllCapsProvider())
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
@@ -133,11 +133,11 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(AllCapsLog.self)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
         XCTAssertThrowsError(_ = try container.make(Log.self, for: ServiceTests.self), "Should not have resolved")
     }

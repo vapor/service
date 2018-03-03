@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         // 🌎 Utility package containing tools for byte manipulation, Codable, OS APIs, and debugging.
-        .package(url: "https://github.com/vapor/core.git", from: "3.0.0-rc"),
+        .package(url: "https://github.com/vapor/core.git", .branch("nio")),
     ],
     targets: [
         .target(name: "Service", dependencies: ["Async", "Debugging"]),
