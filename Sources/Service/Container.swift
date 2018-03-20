@@ -4,14 +4,14 @@ import Dispatch
 /// Capable of creating instances of registered services.
 /// This container makes use of config and environment
 /// to determine which service instances are most appropriate to create.
-public protocol Container: ServiceCacheable, Worker {
+public protocol Container: ServiceCacheable, BasicWorker {
     var config: Config { get }
     var environment: Environment { get }
     var services: Services { get }
 }
 
 /// A basic container
-public final class BasicContainer: Container, Worker {
+public final class BasicContainer: Container {
     /// See Container.config
     public var config: Config
 

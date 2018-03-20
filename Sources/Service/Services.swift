@@ -17,12 +17,10 @@ extension Services {
     /// Adds a closure based service factory
     public mutating func register<S>(
         _ supports: [Any.Type] = [],
-        tag: String? = nil,
         factory: @escaping (Container) throws -> (S)
     ) where S: Service {
         let factory = BasicServiceFactory(
             S.self,
-            tag: tag,
             supports: supports
         ) { worker in
             try factory(worker)
@@ -33,12 +31,10 @@ extension Services {
     /// Adds a closure based service factory
     public mutating func register<S>(
         _ interface: Any.Type,
-        tag: String? = nil,
         factory: @escaping (Container) throws -> (S)
     ) where S: Service {
         let factory = BasicServiceFactory(
             S.self,
-            tag: tag,
             supports: [interface]
         ) { worker in
             try factory(worker)
@@ -49,8 +45,7 @@ extension Services {
     /// Adds any type conforming to ServiceFactory
     public mutating func register(_ factory: ServiceFactory) {
         if let existing = factories.index(where: {
-            $0.serviceType == factory.serviceType &&
-                $0.serviceTag == factory.serviceTag
+            $0.serviceType == factory.serviceType
         }) {
             factories[existing] = factory
         } else {
@@ -82,23 +77,14 @@ extension Services {
 
 extension Services {
     /// Adds an instance of a service to the Services.
-    public mutating func register<S>(
-        _ instance: S,
-        as interface: Any.Type,
-        tag: String? = nil
-    ) where S: Service {
-        return self.register(instance, as: [interface], tag: tag)
+    public mutating func register<S>(_ instance: S, as interface: Any.Type) where S: Service {
+        return self.register(instance, as: [interface])
     }
 
     /// Adds an instance of a service to the Services.
-    public mutating func register<S>(
-        _ instance: S,
-        as supports: [Any.Type] = [],
-        tag: String? = nil
-    ) where S: Service {
+    public mutating func register<S>(_ instance: S, as supports: [Any.Type] = []) where S: Service {
         let factory = BasicServiceFactory(
             S.self,
-            tag: tag,
             supports: supports
         ) { container in
             return instance

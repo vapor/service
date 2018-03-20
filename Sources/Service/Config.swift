@@ -5,43 +5,41 @@ public struct Config {
     fileprivate var preferences: [ServiceIdentifier: ServiceConfig]
     fileprivate var requirements: [ServiceIdentifier: ServiceConfig]
 
+    /// Creates an empty `Config`.
     public init() {
         self.preferences = [:]
         self.requirements = [:]
     }
     
-    // config.prefer(BCryptConfig.self, tagged: "costly", in: .production)
+    /// Use this method to disambiguate multiple available implementations for a given interface.
     public mutating func prefer(
         _ type: Any.Type,
-        tagged tag: String? = nil,
-        for interface: Any.Type,
-        neededBy client: Any.Type? = nil
+        for interface: Any.Type
     ) {
-        let config = ServiceConfig(type: type, tag: tag)
-        let id = ServiceIdentifier(interface: interface, client: client)
+        let config = ServiceConfig(type: type)
+        let id = ServiceIdentifier(interface)
         preferences[id] = config
     }
 
+    ///  Use this method to require a given implementation for an interface.
     public mutating func require(
         _ type: Any.Type,
-        tagged tag: String? = nil,
-        for interface: Any.Type,
-        neededBy client: Any.Type? = nil
+        for interface: Any.Type
     ) {
-        let config = ServiceConfig(type: type, tag: tag)
-        let id = ServiceIdentifier(interface: interface, client: client)
+        let config = ServiceConfig(type: type)
+        let id = ServiceIdentifier(interface)
         requirements[id] = config
     }
-    
+
+    /// MARK: Internal
+
     internal func choose(
         from available: [ServiceFactory],
         interface: Any.Type,
-        for container: Container,
-        neededBy client: Any.Type
+        for container: Container
     ) throws -> ServiceFactory {
-        let specific = ServiceIdentifier(interface: interface, client: client)
-        let all = ServiceIdentifier(interface: interface, client: nil)
-        guard let preference = preferences[specific] ?? preferences[all] else {
+        let specific = ServiceIdentifier(interface)
+        guard let preference = preferences[specific] else {
             throw ServiceError(
                 identifier: "ambiguity",
                 reason: "Please choose which \(interface) you prefer, multiple are available: \(available.readable).",
@@ -52,25 +50,19 @@ public struct Config {
         }
 
         let chosen = available.filter { factory in
-            if let tag = preference.tag {
-                guard factory.serviceTag == tag else {
-                    return false
-                }
-            }
-
             return preference.type == factory.serviceType
         }
 
         guard chosen.count == 1 else {
             if chosen.count < 1 {
                 throw ServiceError(
-                    identifier: "tag",
-                    reason: "No service \(preference.type) (\(preference.tag ?? "*")) has been registered for \(interface)."
+                    identifier: "missing",
+                    reason: "No service \(preference.type) has been registered for \(interface)."
                 )
             } else {
                 throw ServiceError(
-                    identifier: "tags",
-                    reason: "Too many services were found mathcing this tag."
+                    identifier: "tooMany",
+                    reason: "Too many services registered for this type."
                 )
             }
 
@@ -82,12 +74,10 @@ public struct Config {
     internal func approve(
         chosen: ServiceFactory,
         interface: Any.Type,
-        for container: Container,
-        neededBy client: Any.Type
+        for container: Container
     ) throws {
-        let specific = ServiceIdentifier(interface: interface, client: client)
-        let all = ServiceIdentifier(interface: interface, client: nil)
-        guard let requirement = requirements[specific] ?? requirements[all] else {
+        let specific = ServiceIdentifier(interface)
+        guard let requirement = requirements[specific] else {
             return
         }
 
@@ -97,48 +87,31 @@ public struct Config {
                 reason: "\(interface) \(chosen.serviceType) is not required type \(requirement.type)."
             )
         }
-
-        if let tag = requirement.tag {
-            guard chosen.serviceTag == tag else {
-                throw ServiceError(
-                    identifier: "tagRequirement",
-                    reason: "\(chosen.serviceType) tag \(chosen.serviceTag ?? "none") does not equal \(tag)"
-                )
-            }
-        }
     }
 }
 
 extension Array where Element == ServiceFactory {
     var readable: String {
-        return map { factory in
-            if let tag = factory.serviceTag {
-                return "\(factory.serviceType) (\(tag))"
-            } else {
-                return "\(factory.serviceType)"
-            }
-        }.joined(separator: ", ")
+        return map { "\($0.serviceType)" }.joined(separator: ", ")
     }
 }
 
 fileprivate struct ServiceIdentifier: Hashable {
     static func ==(lhs: ServiceIdentifier, rhs: ServiceIdentifier) -> Bool {
-        return lhs.interface == rhs.interface && lhs.client == rhs.client
+        return lhs.interface == rhs.interface
     }
 
     var hashValue: Int {
-        if let client = client {
-            return "\(interface)::\(client)".hashValue
-        } else {
-            return "\(interface)::*".hashValue
-        }
+        return interface.hashValue
     }
 
-    var interface: Any.Type
-    var client: Any.Type?
+    var interface: ObjectIdentifier
+
+    init(_ type: Any.Type) {
+        self.interface = ObjectIdentifier(type)
+    }
 }
 
 fileprivate struct ServiceConfig {
     var type: Any.Type
-    var tag: String?
 }

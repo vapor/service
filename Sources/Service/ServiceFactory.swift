@@ -10,10 +10,6 @@ public protocol ServiceFactory {
     /// interfaces provided in this array.
     var serviceSupports: [Any.Type] { get }
 
-    /// Unique tag for this service, to differentiate
-    /// it from identical service types.
-    var serviceTag: String? { get }
-
     /// Creates an instance of the service for the supplied
     /// container and worker
     func makeService(for worker: Container) throws -> Any

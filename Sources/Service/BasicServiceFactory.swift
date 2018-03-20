@@ -7,8 +7,6 @@ public struct BasicServiceFactory: ServiceFactory {
     /// See ServiceFactory.serviceSupports
     public var serviceSupports: [Any.Type]
 
-    /// See ServiceFactory.serviceTag
-    public var serviceTag: String?
     /// Accepts a container and worker, returning an
     /// initialized service.
     public typealias ServiceFactoryClosure = (Container) throws -> Any
@@ -19,12 +17,10 @@ public struct BasicServiceFactory: ServiceFactory {
     /// Create a new basic service factoryl.
     public init(
         _ type: Any.Type,
-        tag: String?,
         supports interfaces: [Any.Type],
         factory closure: @escaping ServiceFactoryClosure
     ) {
         self.serviceType = type
-        self.serviceTag = tag
         self.serviceSupports = interfaces
         self.closure = closure
     }

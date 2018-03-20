@@ -7,11 +7,8 @@ let package = Package(
         .library(name: "Service", targets: ["Service"]),
     ],
     dependencies: [
-        // ⏱ Promises and reactive-streams in Swift built for high-performance and scalability.
-        .package(url: "https://github.com/vapor/async.git", from: "1.0.0-rc"),
-
         // 🌎 Utility package containing tools for byte manipulation, Codable, OS APIs, and debugging.
-        .package(url: "https://github.com/vapor/core.git", from: "3.0.0-rc"),
+        .package(url: "https://github.com/vapor/core.git", .branch("master")),
     ],
     targets: [
         .target(name: "Service", dependencies: ["Async", "Debugging"]),

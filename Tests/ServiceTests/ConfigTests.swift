@@ -14,11 +14,11 @@ class ConfigTests: XCTestCase {
         let bcryptConfig = BCryptConfig(cost: 4)
         services.register(bcryptConfig)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)
@@ -32,11 +32,11 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
         services.register(BCryptConfig.self)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)
@@ -49,11 +49,11 @@ class ConfigTests: XCTestCase {
         var services = Services()
         services.register(BCryptHasher.self)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
 
         do {
@@ -75,11 +75,11 @@ class ConfigTests: XCTestCase {
         let bcryptConfig5 = BCryptConfig(cost: 5)
         services.register(bcryptConfig5)
 
-        let container = try BasicContainer(
+        let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
-            on: DefaultEventLoop(label: "unit-test")
+            on: EmbeddedEventLoop()
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)
