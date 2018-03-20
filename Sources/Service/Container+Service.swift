@@ -4,25 +4,21 @@ import Foundation
 extension Container {
     /// Returns or creates a service for the given type.
     ///
-    /// If a protocol is supplied, a service conforming
-    /// to the protocol will be returned.
-    public func make<Interface, Client>(
-        _ interface: Interface.Type = Interface.self,
-        for client: Client.Type
-    ) throws -> Interface {
+    /// If a protocol is supplied, a service conforming to the protocol will be returned.
+    public func make<Interface>(_ interface: Interface.Type = Interface.self) throws -> Interface {
         // check if we've previously resolved this service
-        if let service = try serviceCache.get(Interface.self, for: Client.self) {
+        if let service = try serviceCache.get(Interface.self) {
             return service
         }
 
         do {
             // resolve the service and cache it
-            let service = try unsafeMake(Interface.self, for: Client.self) as! Interface
-            serviceCache.set(.service(service), Interface.self, for: Client.self)
+            let service = try unsafeMake(Interface.self) as! Interface
+            serviceCache.set(.service(service), Interface.self)
             return service
         } catch {
             // cache the error
-            serviceCache.set(.error(error), Interface.self, for: Client.self)
+            serviceCache.set(.error(error), Interface.self)
             throw error
         }
     }
@@ -34,10 +30,7 @@ extension Container {
     /// This method accepts and returns Any.
     ///
     /// Use .make() for the safe method.
-    internal func unsafeMake(
-        _ interface: Any.Type,
-        for client: Any.Type
-    ) throws -> Any {
+    internal func unsafeMake(_ interface: Any.Type) throws -> Any {
         // find all available service types that match the requested type.
         let available = services.factories(supporting: interface)
 
@@ -49,8 +42,7 @@ extension Container {
             chosen = try config.choose(
                 from: available,
                 interface: interface,
-                for: self,
-                neededBy: client
+                for: self
             )
         } else if available.count == 0 {
             // no services are available matching
@@ -72,23 +64,10 @@ extension Container {
         try config.approve(
             chosen: chosen,
             interface: interface,
-            for: self,
-            neededBy: client
+            for: self
         )
 
-        // attempt to fetch singleton from cache
-        if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
-            return singleton
-        } else {
-            do {
-                let item = try chosen.makeService(for: self)
-                serviceCache.setSingleton(.service(item), type: chosen.serviceType)
-                return item
-            } catch {
-                serviceCache.setSingleton(.error(error), type: chosen.serviceType)
-                throw error
-            }
-        }
+        return try chosen.makeService(for: self)
     }
 }
 

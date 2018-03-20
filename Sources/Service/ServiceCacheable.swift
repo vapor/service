@@ -6,24 +6,17 @@ public protocol ServiceCacheable {
 
 public final class ServiceCache {
     /// The internal services cache.
-    private var services: [InterfaceClientIdentifier: ResolvedService]
-
-    /// The internal singletons cache
-    internal var singletons: [InterfaceIdentifier: ResolvedService]
+    private var services: [InterfaceIdentifier: ResolvedService]
 
     /// Create a new service cache.
     public init() {
         self.services = [:]
-        self.singletons = [:]
     }
 
     /// Gets the cached service if one exists.
     /// - throws if the service was cached as an error
-    internal func get<Interface, Client>(
-        _ interface: Interface.Type,
-        for client: Client.Type
-    ) throws -> Interface? {
-        let key = InterfaceClientIdentifier(interface: Interface.self, client: Client.self)
+    internal func get<Interface>(_ interface: Interface.Type) throws -> Interface? {
+        let key = InterfaceIdentifier(interface: Interface.self)
         guard let resolved = services[key] else {
             return nil
         }
@@ -32,38 +25,9 @@ public final class ServiceCache {
     }
 
     /// internal method for setting cache based on ResolvedService enum.
-    internal func set<Interface, Client>(
-        _ resolved: ResolvedService,
-        _ interface: Interface.Type,
-        for client: Client.Type
-    ) {
-        let key = InterfaceClientIdentifier(interface: Interface.self, client: Client.self)
+    internal func set<Interface>(_ resolved: ResolvedService, _ interface: Interface.Type) {
+        let key = InterfaceIdentifier(interface: Interface.self)
         services[key] = resolved
-    }
-
-
-    // MARK: Singleton
-
-    /// Gets the cached service if it is a singleton.
-    /// - throws if the service was cached as an error
-    internal func getSingleton(
-        _ service: Any.Type
-    ) throws -> Any? {
-        let key = InterfaceIdentifier(interface: service)
-        guard let resolved = singletons[key] else {
-            return nil
-        }
-
-        return try resolved.resolve()
-    }
-
-    /// internal method for setting cache based on ResolvedService enum.
-    internal func setSingleton(
-        _ resolved: ResolvedService,
-        type serviceType: Any.Type
-    ) {
-        let key = InterfaceIdentifier(interface: serviceType)
-        singletons[key] = resolved
     }
 }
 
@@ -94,25 +58,5 @@ internal struct InterfaceIdentifier: Hashable {
     public init(interface: Any.Type) {
         self.interface = ObjectIdentifier(interface)
         self.hashValue = self.interface.hashValue
-    }
-}
-
-/// hashable struct for a client and interface type.
-internal struct InterfaceClientIdentifier: Hashable {
-    static func ==(lhs: InterfaceClientIdentifier, rhs: InterfaceClientIdentifier) -> Bool {
-        return lhs.client == rhs.client && lhs.interface == rhs.interface
-    }
-
-    let hashValue: Int
-
-    private let interface: ObjectIdentifier
-    private let client: ObjectIdentifier
-
-    public init<Interface, Client>(interface: Interface.Type, client: Client.Type) {
-        self.interface = ObjectIdentifier(Interface.self)
-        self.client = ObjectIdentifier(Client.self)
-        
-        // * 3 is important so that switching the interface and client doesn't provide the same identifier hash
-        self.hashValue = self.interface.hashValue &+ (self.client.hashValue &* 3)
     }
 }
