@@ -1,3 +1,5 @@
+import Async
+
 /// Providers allow external projects to be easily
 /// integrated into an application's service container.
 ///
@@ -30,8 +32,18 @@ public protocol Provider {
     /// Register all services provided by the provider here.
     func register(_ services: inout Services) throws
 
-    /// Called after the container has initialized.
-    func boot(_ worker: Container) throws
+    /// Called before the container has fully initialized.
+    func willBoot(_ worker: Container) throws -> Future<Void>
+
+    /// Called after the container has fully initialized.
+    func didBoot(_ worker: Container) throws -> Future<Void>
+}
+
+extension Provider {
+    /// Called before the container has fully initialized.
+    public func willBoot(_ worker: Container) throws -> Future<Void> {
+        return .done(on: worker)
+    }
 }
 
 // MARK: Optional

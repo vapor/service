@@ -21,7 +21,7 @@ class ConfigTests: XCTestCase {
             on: EmbeddedEventLoop()
         )
 
-        let hasher = try container.make(Hasher.self, for: ConfigTests.self)
+        let hasher = try container.make(Hasher.self)
         XCTAssertEqual(hasher.hash("foo"), "$2y:4:foo")
     }
 
@@ -39,7 +39,7 @@ class ConfigTests: XCTestCase {
             on: EmbeddedEventLoop()
         )
 
-        let hasher = try container.make(Hasher.self, for: ConfigTests.self)
+        let hasher = try container.make(Hasher.self)
         XCTAssertEqual(hasher.hash("foo"), "$2y:12:foo")
     }
 
@@ -57,7 +57,7 @@ class ConfigTests: XCTestCase {
         )
 
         do {
-            _ = try container.make(Hasher.self, for: ConfigTests.self)
+            _ = try container.make(Hasher.self)
             XCTFail("No error thrown")
         } catch let error as ServiceError {
             XCTAssertEqual(error.reason, "No services are available for 'BCryptConfig'.")
@@ -82,7 +82,7 @@ class ConfigTests: XCTestCase {
             on: EmbeddedEventLoop()
         )
 
-        let hasher = try container.make(Hasher.self, for: ConfigTests.self)
+        let hasher = try container.make(Hasher.self)
         XCTAssertEqual(hasher.hash("foo"), "$2y:5:foo")
     }
 
