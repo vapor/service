@@ -49,6 +49,11 @@ extension Environment: Equatable {
 extension Environment {
     /// Gets a key from the process environment
     public static func get(_ key: String) -> String? {
-         return ProcessInfo.processInfo.environment[key]
+        return ProcessInfo.processInfo.environment[key]
+    }
+    
+    /// Gets a key from the process environment with default value
+    public static func get(_ key: String, default defaultValue: String) -> String {
+        return get(key) ?? defaultValue
     }
 }
