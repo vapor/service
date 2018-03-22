@@ -38,6 +38,26 @@ public struct Extend: Codable {
         get { return storage[key] }
         set { storage[key] = newValue }
     }
+
+    /// Get with default.
+    public func get<T>(_ key: String, `default` d: T) -> T {
+        return self[key] as? T ?? d
+    }
+
+    /// Set.
+    public mutating func set<T>(_ key: String, to newValue: T) {
+        return self[key] = newValue
+    }
+
+    /// Get with default.
+    public func get<T>(_ key: AnyKeyPath, `default` d: T) -> T {
+        return get(key.hashValue.description, default: d)
+    }
+
+    /// Set.
+    public mutating func set<T>(_ key: AnyKeyPath, to newValue: T) {
+        set(key.hashValue.description, to: newValue)
+    }
 }
 
 /// Allow Extend to be declared as [:]
