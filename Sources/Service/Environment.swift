@@ -8,11 +8,14 @@ public struct Environment {
     /// `true` if this environment is production.
     public let isRelease: Bool
 
-    /// Create a new environment.
-    /// Use the static helper methods.
-    internal init(name: String, isRelease: Bool) {
+    /// The command-line arguments for this `Environment`.
+    public var arguments: [String]
+
+    /// Create a new environment. Use the static helper methods.
+    public init(name: String, isRelease: Bool, arguments: [String] = CommandLine.arguments) {
         self.name = name
         self.isRelease = isRelease
+        self.arguments = arguments
     }
 }
 

@@ -6,7 +6,7 @@ import Dispatch
 /// to determine which service instances are most appropriate to create.
 public protocol Container: ServiceCacheable, BasicWorker {
     var config: Config { get }
-    var environment: Environment { get }
+    var environment: Environment { get set }
     var services: Services { get }
 }
 
