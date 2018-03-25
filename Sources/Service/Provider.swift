@@ -28,6 +28,11 @@ public protocol Provider {
     /// The location of the views directory
     /// _relative_ to the root of the provider package.
     static var viewsDir: String { get }
+
+    /// Gives the provider a chance to detect information from the `Environment`.
+    /// - parameters:
+    ///     - env: Mutable `Environment`. This can be used to parse command line flags, fetch env variables, and more.
+    func detect(_ env: inout Environment) throws
     
     /// Register all services provided by the provider here.
     func register(_ services: inout Services) throws
@@ -49,11 +54,16 @@ extension Provider {
 // MARK: Optional
 
 extension Provider {
+    /// By default, the `Public` folder will be used as all `Provider`'s public dir.
     public static var publicDir: String {
         return "Public"
     }
-    
+
+    /// By default, the `Resources/Views` folder will be used for all `Provider`'s views dir.
     public static var viewsDir: String {
         return "Resources/Views"
     }
+
+    /// By default, all providers will ignore the `Environment` during `detect(_:)`.
+    public func detect(_ env: inout Environment) throws { }
 }
