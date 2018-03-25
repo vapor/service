@@ -30,8 +30,7 @@ extension SubContainer {
 
     /// See Container.environment
     public var environment: Environment {
-        get { return superContainer.environment }
-        set { superContainer.environment = newValue }
+        return superContainer.environment
     }
 }
 
