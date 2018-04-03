@@ -151,7 +151,7 @@ workflows:
       - linux-fluent-mysql
       - linux-fluent-postgresql
       - linux-redis
-      - linux-jwt
+      # - linux-jwt # doesn't use services yet
       # - macos
 
   nightly:
