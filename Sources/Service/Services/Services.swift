@@ -13,8 +13,10 @@
 ///         return PrintLogger()
 ///     }
 ///
-/// This will ensure a new instance of your service is created for each sub-container. See the `register(_:factory:)`
+/// This will ensure a new instance of your service is created for any `SubContainer`s. See the `register(_:factory:)`
 /// methods for more information.
+///
+/// - note: You may need to disambiguate the closure return by adding `-> T`.
 ///
 /// ## Type
 ///
@@ -34,7 +36,7 @@
 ///     services.register(PrintLogger())
 ///
 /// - warning: When used with reference types (classes), this method will share the same
-///            object with all subcontainers. Be careful to avoid race conditions.
+///            object with all `SubContainer`s. Be careful to avoid race conditions.
 ///
 /// # Making Services
 ///
@@ -50,6 +52,8 @@ public struct Services: CustomStringConvertible {
 
     /// All registered service providers. These are stored so that their lifecycle methods can be called later.
     internal var providers: [Provider]
+
+    // MARK: Init
 
     /// Creates a new `Services`.
     public init() {

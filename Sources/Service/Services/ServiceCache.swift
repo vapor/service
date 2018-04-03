@@ -1,4 +1,4 @@
-/// Caches services. All API besides creating a new `ServiceCache` is internal.
+/// Caches services. All API besides creating a new `ServiceCache` are internal.
 public final class ServiceCache {
     /// The internal services cache.
     private var services: [ServiceID: ResolvedService]

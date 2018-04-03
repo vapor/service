@@ -24,10 +24,9 @@
 /// There are two parts of the boot phase: `willBoot(_:)` and `didBoot(_:)`. Both of these methods supply
 /// the `Provider` with access to the initialized `Container` and allow asynchronous work to be done.
 ///
-/// The `didBoot(_:)` method is guaranteed to be called _after_ `willBoot(_:)`. Most providers should try to do
-/// their work in the `willBoot(_:)` method, resorting to the `didBoot(_:)` method if they rely on work from previous
-/// providers to be done first.
-///
+/// The `didBoot(_:)` method is guaranteed to be called after all providers have run `willBoot(_:)`. Most providers should
+/// try to do their work in the `didBoot(_:)` method, resorting to the `willBoot(_:)` method if they want to pre-empt work
+/// done by other providers.
 public protocol Provider {
     /// This should be the name of the actual git repository that contains the `Provider`. This may be used in the future
     /// for locating physical resources in the `.build` folder.
