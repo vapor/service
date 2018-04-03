@@ -1,13 +1,54 @@
 import Async
 
 /// Services available for a service container.
-public struct Services {
+public struct Services: CustomStringConvertible {
     var factories: [ServiceFactory]
-    public internal(set) var providers: [Provider]
+    var providers: [Provider]
+
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        var desc: [String] = []
+
+        desc.append("Services:")
+        if factories.isEmpty {
+            desc.append("- none")
+        } else {
+            for factory in factories {
+                if factory.serviceSupports.isEmpty {
+                    desc.append("- \(factory.serviceType)")
+                } else {
+                    let interfaces = factory.serviceSupports.map { "\($0)" }.joined(separator: ", ")
+                    desc.append("- \(factory.serviceType): \(interfaces)")
+                }
+            }
+        }
+
+        desc.append("Providers:")
+        if providers.isEmpty {
+            desc.append("- none")
+        } else {
+            for provider in providers {
+                desc.append("- \(type(of: provider))")
+            }
+        }
+
+        return desc.joined(separator: "\n")
+    }
 
     public init() {
         self.factories = []
         self.providers = []
+    }
+
+    /// Returns all factories that support the supplied interface.
+    internal func factories(supporting interface: Any.Type) -> [ServiceFactory] {
+        var factories = [ServiceFactory]()
+
+        for factory in self.factories where factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface }) {
+            factories.append(factory)
+        }
+
+        return factories
     }
 }
 

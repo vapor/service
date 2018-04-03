@@ -1,31 +1,36 @@
-import Async
-
+/// Basic, closure-based `ServiceFactory` implementation.
+///
+///     let factory = BasicServiceFactory(MyFoo.self, suppports: [Foo.self]) { container in
+///         return MyFoo()
+///     }
+///
 public struct BasicServiceFactory: ServiceFactory {
-    /// See ServiceFactory.serviceType
+    /// See `ServiceFactory`.
     public let serviceType: Any.Type
 
-    /// See ServiceFactory.serviceSupports
+    /// See `ServiceFactory`.
     public var serviceSupports: [Any.Type]
 
-    /// Accepts a container and worker, returning an
-    /// initialized service.
-    public typealias ServiceFactoryClosure = (Container) throws -> Any
+    /// Accepts a `Container`, returning an initialized service.
+    public let closure: (Container) throws -> Any
 
-    /// Closure that constructs the service
-    public let closure: ServiceFactoryClosure
-
-    /// Create a new basic service factoryl.
+    /// Create a new `BasicServiceFactory`.
+    ///
+    /// - parameters:
+    ///     - type: The `ServiceFactory` service type. This is the type that should be returned by the factory closure.
+    ///     - interfaces: A list of protocols that the service supports. Empty array if the service does not support any protocols.
+    ///     - factory: A closure that accepts a container and returns an initialized service.
     public init(
         _ type: Any.Type,
         supports interfaces: [Any.Type],
-        factory closure: @escaping ServiceFactoryClosure
+        factory closure: @escaping (Container) throws -> Any
     ) {
         self.serviceType = type
         self.serviceSupports = interfaces
         self.closure = closure
     }
 
-    /// See ServiceFactory.makeService
+    /// See `ServiceFactory`.
     public func makeService(for worker: Container) throws -> Any {
         return try closure(worker)
     }
