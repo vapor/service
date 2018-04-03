@@ -28,10 +28,6 @@
 /// try to do their work in the `didBoot(_:)` method, resorting to the `willBoot(_:)` method if they want to pre-empt work
 /// done by other providers.
 public protocol Provider {
-    /// This should be the name of the actual git repository that contains the `Provider`. This may be used in the future
-    /// for locating physical resources in the `.build` folder.
-    static var repositoryName: String { get }
-    
     /// Register all services you would like to provide the `Container` here.
     ///
     ///     services.register(RedisCache.self)
@@ -39,15 +35,15 @@ public protocol Provider {
     func register(_ services: inout Services) throws
 
     /// Called before the container has fully initialized.
-    func willBoot(_ worker: Container) throws -> Future<Void>
+    func willBoot(_ container: Container) throws -> Future<Void>
 
     /// Called after the container has fully initialized and after `willBoot(_:)`.
-    func didBoot(_ worker: Container) throws -> Future<Void>
+    func didBoot(_ container: Container) throws -> Future<Void>
 }
 
 extension Provider {
     /// See `Provider`.
-    public func willBoot(_ worker: Container) throws -> Future<Void> {
-        return .done(on: worker)
+    public func willBoot(_ container: Container) throws -> Future<Void> {
+        return .done(on: container)
     }
 }
