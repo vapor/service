@@ -1,4 +1,15 @@
-/// The environment the application is running in, i.e., production, dev, etc.
+/// The environment the application is running in, i.e., production, dev, etc. All `Container`'s will have
+/// an `Environment` that can be used to dynamically register and configure services.
+///
+///     switch env {
+///     case .production: config.prefer(ProductionLogger.self, for: Logger.self)
+///     default: config.prefer(DebugLogger.self, for: Logger.self)
+///     }
+///
+/// The `Environment` can also be used to retrieve variables from the Process's ENV.
+///
+///     print(Environment.get("DB_PASSWORD"))
+///
 public struct Environment: Equatable {
     // MARK: Presets
 
@@ -38,10 +49,13 @@ public struct Environment: Equatable {
 
     // MARK: Properties
 
-    /// The environment name.
+    /// The environment's unique name.
     public let name: String
 
-    /// `true` if this environment is production.
+    /// `true` if this environment is meant for production use cases.
+    ///
+    /// This usually means reducing logging, disabling debug information, and sometimes
+    /// providing warnings about configuration states that are not suitable for production.
     public let isRelease: Bool
 
     /// The command-line arguments for this `Environment`.

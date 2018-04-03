@@ -1,6 +1,3 @@
-import Async
-import Dispatch
-
 /// `Container`s are used to create instances of services that your application needs in a configurable way.
 ///
 ///     let client = try container.make(Client.self)
@@ -22,7 +19,7 @@ import Dispatch
 ///     print(container.eventLoop)
 ///
 /// - warning: You should never use services created from a `Container` on _another_ `Container`'s `EventLoop`.
-public protocol Container: ServiceCacheable, BasicWorker {
+public protocol Container: BasicWorker {
     /// Service `Config`. Used to disambiguate and/or require concrete services for a given interface.
     var config: Config { get }
 
@@ -31,14 +28,12 @@ public protocol Container: ServiceCacheable, BasicWorker {
 
     /// Available services. This struct contains all of this `Container`'s available service implementations.
     var services: Services { get }
+
+    /// This `Container`'s cached service instances. This is not shared when creating sub-containers.
+    var serviceCache: ServiceCache { get }
 }
 
 extension Container {
-    /// All `Provider`s that have been registered to this `Container`'s `Services`.
-    public var providers: [Provider] {
-        return services.providers
-    }
-
     /// Creates a service for the supplied interface or type.
     ///
     ///     let redis = try container.make(RedisCache.self)
@@ -62,25 +57,44 @@ extension Container {
 
         do {
             // resolve the service and cache it
-            let service = try anyMake(T.self) as! T
-            serviceCache.set(.service(service), T.self)
-            return service
+            let service = try unsafeMake(T.self)
+            serviceCache.set(service: service, T.self)
+            return service as! T
         } catch {
             // cache the error
-            serviceCache.set(.error(error), T.self)
+            serviceCache.set(error: error, T.self)
             throw error
         }
     }
 
+    /// Creates a `SubContainer` for this `Container` on the supplied `Worker`.
+    ///
+    /// - parameters:
+    ///     - worker: `Worker` containing a different `EventLoop` for the `SubContainer` to use.
+    /// - returns: Generic instance of a `SubContainer`.
+    public func subContainer(on worker: Worker) -> SubContainer {
+        return BasicSubContainer(super: self, on: worker)
+    }
+    
+    /// All `Provider`s that have been registered to this `Container`'s `Services`.
+    public var providers: [Provider] {
+        return services.providers
+    }
+
+    // MARK: Internal
+
     /// Type-erased version of `make(_:)`.
+    ///
+    ///     let redis = try container.anyMake(RedisCache.self)
+    ///     print(redis) // Service
     ///
     /// - parameters:
     ///     - type: Service or interface type `Any.Type` to create.
     /// - throws: Any error finding or initializing the requested service.
     /// - returns: Initialized instance of supplied type.
-    internal func anyMake(_ interface: Any.Type) throws -> Any {
+    internal func unsafeMake(_ interface: Any.Type) throws -> Service {
         // find all available service types that match the requested type.
-        let available = services.factories(supporting: interface)
+        let available = services(supporting: interface)
 
         let chosen: ServiceFactory
 
@@ -115,6 +129,17 @@ extension Container {
             for: self
         )
 
-        return try chosen.makeService(for: self)
+        return try chosen.makeService(for: self) as! Service
+    }
+
+    /// Returns all factories that support the supplied interface.
+    internal func services(supporting interface: Any.Type) -> [ServiceFactory] {
+        var factories = [ServiceFactory]()
+
+        for factory in services.factories where factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface }) {
+            factories.append(factory)
+        }
+
+        return factories
     }
 }
