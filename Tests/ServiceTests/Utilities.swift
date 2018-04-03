@@ -58,6 +58,12 @@ class AllCapsProvider: Provider {
     }
 }
 
+final class Request: ContainerAlias {
+    static var aliasedContainer: KeyPath<Request, Container> = \.sharedContainer
+    public var sharedContainer: Container
+    init() { fatalError() }
+}
+
 // MARK: BCrypt
 
 protocol Hasher {

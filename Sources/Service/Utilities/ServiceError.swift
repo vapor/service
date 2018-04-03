@@ -1,20 +1,29 @@
-import Foundation
 import Debugging
 
 /// An error using Services.
 public struct ServiceError: Debuggable {
+    /// See `Debuggable`.
     public static let readableName = "Service Error"
+
+    /// See `Debuggable`.
     public let identifier: String
+
+    /// See `Debuggable`.
     public var reason: String
-    public var file: String
-    public var function: String
-    public var line: UInt
-    public var column: UInt
+
+    /// See `Debuggable`.
+    public var sourceLocation: SourceLocation?
+
+    /// See `Debuggable`.
     public var stackTrace: [String]
+
+    /// See `Debuggable`.
     public var possibleCauses: [String]
+
+    /// See `Debuggable`.
     public var suggestedFixes: [String]
 
-    /// Creates a new Apple TLS error
+    /// Creates anew `ServiceError`.
     public init(
         identifier: String,
         reason: String,
@@ -27,13 +36,9 @@ public struct ServiceError: Debuggable {
     ) {
         self.identifier = identifier
         self.reason = reason
-        self.file = file
-        self.function = function
-        self.line = line
-        self.column = column
+        self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
         self.stackTrace = ServiceError.makeStackTrace()
         self.possibleCauses = possibleCauses
         self.suggestedFixes = suggestedFixes
     }
 }
-
