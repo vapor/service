@@ -12,6 +12,7 @@ extension Environment {
     /// This allows you to set custom credentials to specific environments such as
     /// production, testing, and development.
     /// If you use custom environments, those will also be loaded.
+    /// Note: The .env files must be located in the root directory.
     public func load() {
         // Load the default one
         self.load(environment: ".env")
@@ -23,7 +24,7 @@ extension Environment {
     /// Loads the specific env file and sets the appropiate environment variables
     /// Parse the contents of the .env file into a readable key/value
     /// - parameter environment: The filename of the .env file to load. i.e. `.env`.
-    /// Note: The .env files must be loaced in the root directory.
+    /// Note: The .env files must be located in the root directory.
     public func load(environment fileName: String) {
         // Create the file path
         let url = URL(fileURLWithPath: DirectoryConfig.detect().workDir).appendingPathComponent(fileName)
@@ -38,9 +39,9 @@ extension Environment {
     }
     
     /// Parse the contents of the .env file into a readable key/value
-    /// - parameter content: The .env string. This can be multiples lines. i.e. `"USERNAME="Vapor"`
+    /// - parameter content: The .env string. This can be multiples lines. i.e. `USERNAME="Vapor"`
     /// - returns: Returns a Dictionary of Key/Value strings.
-    /// NOTE: The content must be formatted in a Key=Value format. 
+    /// NOTE: The content must be formatted in a Key=Value format.
     func parse(content: String) -> [String : String] {
         let pattern = "(\\w+)=(?:\"([:<>;~=\\[\\]\\w\\s/?(\\\\\")!@#$%^&*(){},`'-\\.\\+\\|]+)\"|([:<>;~=\\[\\]\\w/?!@#$%^&*(){},`'-\\.\\+\\|]+)[\\s\\n\\r]*)"
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [:] }
