@@ -1,88 +1,35 @@
 @testable import Service
 import XCTest
 
-class EnvironmentTests: XCTestCase {
-    let env = Environment(name: "dotenv", isRelease: false)
-    
-    func testMultipleLines() throws {
-        let parsedData = self.env.parse(content: """
-            FOO=someValue
-            BAR=theBarValue
-            CAR=theCarValue
-        """)
-        XCTAssertEqual(parsedData["FOO"], "someValue")
-        XCTAssertEqual(parsedData["BAR"], "theBarValue")
-        XCTAssertEqual(parsedData["CAR"], "theCarValue")
-    }
-    
-    func testUnquotedValue() throws {
-        let parsedData = self.env.parse(content: """
-            FOO=someValue
-        """)
-        XCTAssertEqual(parsedData["FOO"], "someValue")
-    }
-    
-    func testUnquotedWhitespaceSeparatedValue() throws {
-        let parsedData = self.env.parse(content: """
-            FOO=some crazy phrase
-        """)
-        XCTAssertEqual(parsedData["FOO"], "some")
-    }
-    
-    func testQuotedValue() throws {
-        let parsedData = self.env.parse(content: """
-            FOO="someValue"
-        """)
-        XCTAssertEqual(parsedData["FOO"], "someValue")
-    }
-    
-    func testQuotedWhitespaceSeparatedValue() throws {
-        let parsedData = self.env.parse(content: """
-            FOO="some crazy phrase"
-        """)
-        XCTAssertEqual(parsedData["FOO"], "some crazy phrase")
-    }
-    
-    func testInlineComment() throws {
-        let parsedData = self.env.parse(content: """
-            FOO=someValueWithAn # Inline Comment
-        """)
-        XCTAssertEqual(parsedData["FOO"], "someValueWithAn")
-    }
-    
-    func testQuotedValueWithComment() throws {
-        let parsedData = self.env.parse(content: """
-            FOO="some Value With An" # Inline Comment
-        """)
-        XCTAssertEqual(parsedData["FOO"], "some Value With An")
-    }
-    
-    func testValueWithSymbols() throws {
-        let parsedData = self.env.parse(content: """
-            FOO=a!b@c#d$e%f^g&h*j(k)l{m}.,'-+|
-        """)
-        XCTAssertEqual(parsedData["FOO"], "a!b@c#d$e%f^g&h*j(k)l{m}.,'-+|")
+class EnvironmentTests: XCTestCase {    
+    func testDecoder() throws {
+        struct Test: EnvironmentConfig {
+            let string: String
+            let float: Float
+            let double: Double
+            let int: Int
+            let uint: UInt
+            let bool: Bool
+        }
         
-    }
-    
-    func test1PasswordGeneratedPasswordWith10Symbols() throws {
-        let parsedData = self.env.parse(content: """
-            FOO=6#}U2/Ri8#f@AaDJ,VYxDG(?&v+8
-        """)
-        XCTAssertEqual(parsedData["FOO"], "6#}U2/Ri8#f@AaDJ,VYxDG(?&v+8")
-    }
-    
-    func testEscapedDoubleQuote() throws {
-        let parsedData = self.env.parse(content: """
-            FOO="some Value \" With An" # Inline Comment
-        """)
-        XCTAssertEqual(parsedData["FOO"], "some Value \" With An")
-    }
-    
-    func testPostgreSQLUrl() throws {
-        let parsedData = self.env.parse(content: """
-            DATABSE_URL=psql://vapor@localhost:5432/vapor-test
-        """)
-        XCTAssertEqual(parsedData["DATABSE_URL"], "psql://vapor@localhost:5432/vapor-test")
+        let data = """
+        # This is a test comment
+        string="Coding Test" # Another Comment
+        float=0.3
+        double=0.2
+        int=1
+        uint=12
+        bool=true
+        """.data(using: .utf8)!
+        
+        let decoder = EnvironmentDecoder()
+        let object = try decoder.decode(Test.self, from: data)
+        print(object)
+        XCTAssertEqual(object.string, "Coding Test")
+        XCTAssertEqual(object.float, 0.3)
+        XCTAssertEqual(object.double, 0.2)
+        XCTAssertEqual(object.int, 1)
+        XCTAssertEqual(object.uint, 12)
+        XCTAssertEqual(object.bool, true)
     }
 }
