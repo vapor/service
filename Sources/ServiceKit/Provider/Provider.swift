@@ -1,3 +1,5 @@
+import NIO
+
 /// `Provider`s allow third-party services to be easily integrated into a service `Container`.
 ///
 /// Simply register the `Provider` like any other service and it will take care of setting up any necessary
@@ -27,23 +29,28 @@
 /// The `didBoot(_:)` method is guaranteed to be called after all providers have run `willBoot(_:)`. Most providers should
 /// try to do their work in the `didBoot(_:)` method, resorting to the `willBoot(_:)` method if they want to pre-empt work
 /// done by other providers.
-public protocol Provider {
+public protocol ServiceProvider {
     /// Register all services you would like to provide the `Container` here.
     ///
     ///     services.register(RedisCache.self)
     ///
-    func register(_ services: inout Services) throws
+    func register(_ s: inout Services) throws
 
     /// Called before the container has fully initialized.
-    func willBoot(_ container: Container) throws -> Future<Void>
+    func willBoot(_ c: Container) throws -> EventLoopFuture<Void>
 
     /// Called after the container has fully initialized and after `willBoot(_:)`.
-    func didBoot(_ container: Container) throws -> Future<Void>
+    func didBoot(_ c: Container) throws -> EventLoopFuture<Void>
 }
 
-extension Provider {
+extension ServiceProvider {
     /// See `Provider`.
-    public func willBoot(_ container: Container) throws -> Future<Void> {
-        return .done(on: container)
+    public func willBoot(_ container: Container) throws -> EventLoopFuture<Void> {
+        return container.eventLoop.newSucceededFuture(result: ())
+    }
+    
+    /// See `Provider`.
+    public func didBoot(_ container: Container) throws -> EventLoopFuture<Void> {
+        return container.eventLoop.newSucceededFuture(result: ())
     }
 }

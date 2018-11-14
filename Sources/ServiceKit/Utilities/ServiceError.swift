@@ -1,7 +1,6 @@
-import Debugging
-
+#warning("error enum")
 /// An error using Services.
-public struct ServiceError: Debuggable {
+public struct ServiceError: Error {
     /// See `Debuggable`.
     public static let readableName = "Service Error"
 
@@ -10,12 +9,6 @@ public struct ServiceError: Debuggable {
 
     /// See `Debuggable`.
     public var reason: String
-
-    /// See `Debuggable`.
-    public var sourceLocation: SourceLocation?
-
-    /// See `Debuggable`.
-    public var stackTrace: [String]
 
     /// See `Debuggable`.
     public var possibleCauses: [String]
@@ -36,8 +29,6 @@ public struct ServiceError: Debuggable {
     ) {
         self.identifier = identifier
         self.reason = reason
-        self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
-        self.stackTrace = ServiceError.makeStackTrace()
         self.possibleCauses = possibleCauses
         self.suggestedFixes = suggestedFixes
     }
