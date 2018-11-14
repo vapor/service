@@ -1,5 +1,6 @@
 import Async
 import Service
+import XCTest
 
 // MARK: Log
 
@@ -37,10 +38,13 @@ extension AllCapsLog: ServiceType {
 }
 
 
-class ConfigurableLog: Log, Service {
-    let myConfig: String
+struct ConfigurableLog: Log, Service {
+    var myConfig: String
     
-    init(config: String) { self.myConfig = config }
+    init(config: String) {
+        self.myConfig = config
+    }
+
     func log(_ string: String) {
         print("[Config \(myConfig) Log] - \(string)")
     }
@@ -129,3 +133,25 @@ extension BCryptConfig: ServiceType {
         return BCryptConfig(cost: cost)
     }
 }
+
+extension XCTestCase {
+    open func invertedExpectation(description: String) -> XCTestExpectation {
+        let result = expectation(description: description)
+        
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+        result.isInverted = true
+#endif
+        return result
+    }
+    
+    open func countedExpectation(expecting: Int, description: String) -> XCTestExpectation {
+        let result = expectation(description: description)
+        
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+        result.expectedFulfillmentCount = expecting
+        result.assertForOverFulfill = true
+#endif
+        return result
+    }
+}
+
