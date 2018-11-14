@@ -11,18 +11,16 @@ extension Container {
         for client: Client.Type
     ) throws -> Interface {
         // check if we've previously resolved this service
-        if let service = try serviceCache.get(Interface.self, for: Client.self) {
+        if let service = try serviceCache.get(Interface.self) {
             return service
         }
 
         do {
             // resolve the service and cache it
             let service = try unsafeMake(Interface.self, for: Client.self) as! Interface
-            serviceCache.set(.service(service), Interface.self, for: Client.self)
             return service
         } catch {
             // cache the error
-            serviceCache.set(.error(error), Interface.self, for: Client.self)
             throw error
         }
     }
@@ -49,13 +47,12 @@ extension Container {
             chosen = try config.choose(
                 from: available,
                 interface: interface,
-                for: self,
-                neededBy: client
+                for: self
             )
         } else if available.count == 0 {
             // no services are available matching
             // the type requested.
-            throw ServiceError(.noneAvailable(type: interface))
+            throw ServiceError(identifier: "", reason: "")
         } else {
             // only one service matches, no need to disambiguate.
             // let's use it!
@@ -65,34 +62,16 @@ extension Container {
         try config.approve(
             chosen: chosen,
             interface: interface,
-            for: self,
-            neededBy: client
+            for: self
         )
 
         // lazy loading
         let supplements = services.supplements(for: chosen)
 
-        if chosen.serviceIsSingleton {
-            // attempt to fetch singleton from cache
-            if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
-                return singleton
-            } else {
-                do {
-                    var item = try chosen.makeService(for: self)
-                    try supplements.forEach { try $0.supplementService(&item, in: self) }
-                    serviceCache.setSingleton(.service(item), type: chosen.serviceType)
-                    return item
-                } catch {
-                    serviceCache.setSingleton(.error(error), type: chosen.serviceType)
-                    throw error
-                }
-            }
-        } else {
-            // create an instance of this service type.
-            var item = try chosen.makeService(for: self)
-            try supplements.forEach { try $0.supplementService(&item, in: self) }
-            return item
-        }
+        // create an instance of this service type.
+        var item = try chosen.makeService(for: self)
+        try supplements.forEach { try $0.supplementService(&item, in: self) }
+        return item
     }
 }
 
@@ -111,6 +90,6 @@ extension Services {
     
     internal func supplements(for factory: ServiceFactory) -> [ServiceSupplement] {
         return supplements.filter { supplement in
-            return supplement.supplementedServiceType == factory.serviceType && supplement.supplementedServiceTag == factory.serviceTag }
+            return supplement.supplementedServiceType == factory.serviceType }
     }
 }

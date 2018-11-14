@@ -7,14 +7,11 @@ let package = Package(
         .library(name: "Service", targets: ["Service"]),
     ],
     dependencies: [
-        // Core extensions, type-aliases, and functions that facilitate common tasks.
-        .package(url: "https://github.com/vapor/async.git", .branch("beta")),
-
-        // A library to aid Vapor users with better debugging around the framework
-        .package(url: "https://github.com/vapor/core.git", .branch("beta")),
+        // 🌎 Utility package containing tools for byte manipulation, Codable, OS APIs, and debugging.
+        .package(url: "https://github.com/vapor/core.git", from: "3.0.0"),
     ],
     targets: [
-        .target(name: "Service", dependencies: ["Async", "Debugging"]),
+        .target(name: "Service", dependencies: ["Async", "Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
     ]
 )

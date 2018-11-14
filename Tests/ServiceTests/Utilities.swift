@@ -57,7 +57,15 @@ class AllCapsProvider: Provider {
         services.register(AllCapsLog.self)
     }
 
-    func boot(_ container: Container) throws { }
+    func didBoot(_ worker: Container) throws -> EventLoopFuture<Void> {
+        return .done(on: worker)
+    }
+}
+
+final class Request: ContainerAlias {
+    static var aliasedContainer: KeyPath<Request, Container> = \.sharedContainer
+    public var sharedContainer: Container
+    init() { fatalError() }
 }
 
 // MARK: BCrypt
@@ -89,7 +97,7 @@ extension BCryptHasher: ServiceType {
     }
 
     static func makeService(for container: Container) throws -> Self {
-        let config = try container.make(BCryptConfig.self, for: BCryptHasher.self)
+        let config = try container.make(BCryptConfig.self)
         return .init(cost: config.cost)
     }
 }
