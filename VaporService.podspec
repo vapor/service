@@ -25,7 +25,7 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = "10.0"
 
-  s.source       = { :git => "https://github.com/twof/service.git", :branch => "master" }
+  s.source       = { :git => "https://github.com/vapor/service.git", :branch => "master" }
 
   s.source_files  = "Sources/Service/**/*.swift"
   s.module_name = "Service"
