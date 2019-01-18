@@ -11,12 +11,12 @@ public final class BasicContainer: Container {
     public let services: Services
 
     /// See `Container.`
-    public let eventLoop: EventLoop
+    public let eventLoopGroup: EventLoopGroup
 
     /// Create a new `BasicContainer`.
-    public init(environment: Environment, services: Services, on eventLoop: EventLoop) {
+    public init(environment: Environment, services: Services, on eventLoopGroup: EventLoopGroup) {
         self.environment = environment
         self.services = services
-        self.eventLoop = eventLoop
+        self.eventLoopGroup = eventLoopGroup
     }
 }

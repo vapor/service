@@ -28,7 +28,7 @@ public protocol Container: class {
     /// Available services. This struct contains all of this `Container`'s available service implementations.
     var services: Services { get }
     
-    var eventLoop: EventLoop { get }
+    var eventLoopGroup: EventLoopGroup { get }
 }
 
 extension Container {
