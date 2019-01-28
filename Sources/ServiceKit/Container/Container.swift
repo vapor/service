@@ -28,7 +28,7 @@ public protocol Container: class {
     /// Available services. This struct contains all of this `Container`'s available service implementations.
     var services: Services { get }
     
-    var eventLoopGroup: EventLoopGroup { get }
+    var eventLoop: EventLoop { get }
 }
 
 extension Container {
@@ -71,6 +71,6 @@ extension Container {
     
     /// All `Provider`s that have been registered to this `Container`'s `Services`.
     public var providers: [ServiceProvider] {
-        return services.providers
+        return self.services.providers
     }
 }

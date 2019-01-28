@@ -46,11 +46,11 @@ public protocol ServiceProvider {
 extension ServiceProvider {
     /// See `Provider`.
     public func willBoot(_ container: Container) throws -> EventLoopFuture<Void> {
-        return container.eventLoopGroup.next().makeSucceededFuture(result: ())
+        return container.eventLoop.makeSucceededFuture(())
     }
     
     /// See `Provider`.
     public func didBoot(_ container: Container) throws -> EventLoopFuture<Void> {
-        return container.eventLoopGroup.next().makeSucceededFuture(result: ())
+        return container.eventLoop.makeSucceededFuture(())
     }
 }
