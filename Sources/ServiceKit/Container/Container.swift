@@ -28,6 +28,10 @@ public protocol Container: class {
     /// Available services. This struct contains all of this `Container`'s available service implementations.
     var services: Services { get }
     
+    /// Stores cached singleton services.
+    var cache: ServiceCache { get set }
+    
+    /// This container's event loop.
     var eventLoop: EventLoop { get }
 }
 
@@ -48,6 +52,11 @@ extension Container {
     /// - throws: Any error finding or initializing the requested service.
     /// - returns: Initialized instance of `T`
     public func make<S>(_ service: S.Type = S.self) throws -> S {
+        // check if cached
+        if let cached = self.cache.get(service: S.self) {
+            return cached
+        }
+        
         // create service lookup identifier
         let id = ServiceID(S.self)
         
@@ -65,7 +74,12 @@ extension Container {
             try extensions.forEach { try $0.serviceExtend(&instance, self) }
         }
         
-        // return created, extended instance
+        // cache if singleton
+        if factory.isSingleton {
+            self.cache.set(service: instance)
+        }
+        
+        // return created and extended instance
         return instance
     }
     
