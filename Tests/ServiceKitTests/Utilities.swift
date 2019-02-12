@@ -46,9 +46,10 @@ final class AllCapsProvider: ServiceProvider {
 final class BCryptProvider: ServiceProvider {
     func register(_ s: inout Services) throws {
         s.register(BCryptConfig.self) { c in
-            if c.environment.isRelease {
+            switch c.environment {
+            case .production:
                 return .init(cost: 12)
-            } else {
+            default:
                 return .init(cost: 4)
             }
         }
