@@ -12,6 +12,7 @@ import Foundation
 ///
 ///     print(Environment.get("DB_PASSWORD"))
 ///
+@dynamicMemberLookup
 public struct Environment: Equatable {
     // MARK: Presets
 
@@ -42,6 +43,13 @@ public struct Environment: Equatable {
         return ProcessInfo.processInfo.environment[key]
     }
 
+    /// Gets a key from the proccess environment
+    ///
+    ///     Environment.detect().DATABASE_USER
+    public subscript(dynamicMember member: String) -> String? {
+        return ProcessInfo.processInfo.environment[member]
+    }
+    
     // MARK: Equatable
 
     /// See `Equatable`
