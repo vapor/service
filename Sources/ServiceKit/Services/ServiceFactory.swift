@@ -1,10 +1,25 @@
-///// Base protocol for all service factories. This is how the `Services` struct stores its registered services.
-/////
-///// You will usually not use this protocol directly. See `ServiceType` protocol and the `Services` struct instead.
-//internal protocol ServiceFactory {
-//    /// This service's actual type. Used for looking up the service uniquely.
-//    var serviceType: Any.Type { get }
-//
-//    /// Creates an instance of the service for the supplied `Container`.
-//    func serviceMake(for container: Container) throws -> Any
-//}
+/// Basic, closure-based `ServiceFactory` implementation.
+///
+///     let factory = BasicServiceFactory(MyFoo.self, suppports: [Foo.self]) { container in
+///         return MyFoo()
+///     }
+///
+struct ServiceFactory<T> {
+    /// Accepts a `Container`, returning an initialized service.
+    let closure: (Container) throws -> T
+    
+    /// Create a new `BasicServiceFactory`.
+    ///
+    /// - parameters:
+    ///     - type: The `ServiceFactory` service type. This is the type that should be returned by the factory closure.
+    ///     - interfaces: A list of protocols that the service supports. Empty array if the service does not support any protocols.
+    ///     - factory: A closure that accepts a container and returns an initialized service.
+    public init(_ closure: @escaping (Container) throws -> T) {
+        self.closure = closure
+    }
+    
+    /// See `ServiceFactory`.
+    public func serviceMake(for worker: Container) throws -> T {
+        return try closure(worker)
+    }
+}
