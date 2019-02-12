@@ -16,7 +16,7 @@ public protocol ServiceType: Service {
     /// Creates a new instance of the service for the supplied `Container`.
     ///
     /// See `ServiceFactory` for more information.
-    static func makeService(for worker: Container) throws -> Self
+    static func makeService(for container: Container) throws -> Self
 }
 
 /// MARK: Default Implementations
