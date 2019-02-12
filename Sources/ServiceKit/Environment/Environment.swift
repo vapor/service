@@ -1,3 +1,5 @@
+import Foundation
+
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`'s will have
 /// an `Environment` that can be used to dynamically register and configure services.
 ///
@@ -15,22 +17,22 @@ public struct Environment: Equatable {
 
     /// An environment for deploying your application to consumers.
     public static var production: Environment {
-        return .init(name: "production", isRelease: true)
+        return .init(name: "production")
     }
 
     /// An environment for developing your application.
     public static var development: Environment {
-        return .init(name: "development", isRelease: false)
+        return .init(name: "development")
     }
 
     /// An environment for testing your application.
     public static var testing: Environment {
-        return .init(name: "testing", isRelease: false)
+        return .init(name: "testing")
     }
 
     /// Creates a custom environment.
-    public static func custom(name: String, isRelease: Bool = false) -> Environment {
-        return .init(name: name, isRelease: isRelease)
+    public static func custom(name: String) -> Environment {
+        return .init(name: name)
     }
 
     // MARK: Env
@@ -56,7 +58,9 @@ public struct Environment: Equatable {
     ///
     /// This usually means reducing logging, disabling debug information, and sometimes
     /// providing warnings about configuration states that are not suitable for production.
-    public let isRelease: Bool
+    public var isRelease: Bool {
+        return !_isDebugAssertConfiguration()
+    }
 
     /// The command-line arguments for this `Environment`.
     public var arguments: [String]
@@ -64,9 +68,8 @@ public struct Environment: Equatable {
     // MARK: Init
 
     /// Create a new `Environment`.
-    public init(name: String, isRelease: Bool, arguments: [String] = CommandLine.arguments) {
+    public init(name: String, arguments: [String] = CommandLine.arguments) {
         self.name = name
-        self.isRelease = isRelease
         self.arguments = arguments
     }
 }

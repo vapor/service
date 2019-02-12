@@ -1,17 +1,16 @@
-// swift-tools-version:4.0
+// swift-tools-version:5.0
 import PackageDescription
 
 let package = Package(
-    name: "Service",
+    name: "service-kit",
     products: [
-        .library(name: "Service", targets: ["Service"]),
+        .library(name: "ServiceKit", targets: ["ServiceKit"]),
     ],
     dependencies: [
-        // 🌎 Utility package containing tools for byte manipulation, Codable, OS APIs, and debugging.
-        .package(url: "https://github.com/vapor/core.git", from: "3.0.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", .branch("master"))
     ],
     targets: [
-        .target(name: "Service", dependencies: ["Async", "Core", "Debugging"]),
-        .testTarget(name: "ServiceTests", dependencies: ["Service"]),
+        .target(name: "ServiceKit", dependencies: ["NIO"]),
+        .testTarget(name: "ServiceKitTests", dependencies: ["ServiceKit"]),
     ]
 )

@@ -1,7 +1,6 @@
 import XCTest
-@testable import ServiceTests
+@testable import ServiceKitTests
 
 XCTMain([
-    testCase(ConfigTests.allTests),
-    testCase(ServiceTests.allTests),
+    testCase(ServiceKitTests.allTests),
 ])

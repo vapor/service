@@ -48,20 +48,37 @@
 /// See `Container` for more information.
 public struct Services: CustomStringConvertible {
     /// All registered services.
-    internal var factories: [ServiceFactory]
+    var factories: [ServiceID: Any]
 
     /// All registered service providers. These are stored so that their lifecycle methods can be called later.
-    internal var providers: [Provider]
+    var providers: [ServiceProvider]
+    
+    var extensions: [ServiceID: [Any]]
 
     // MARK: Init
 
     /// Creates a new `Services`.
     public init() {
-        self.factories = []
+        self.factories = [:]
         self.providers = []
+        self.extensions = [:]
     }
 
     // MARK: Instance
+    
+    /// Registers a pre-initialized instance of a `Service` conforming to a single interface to the `Services`.
+    ///
+    ///     services.register(PrintLogger(), as: Logger.self)
+    ///
+    /// - warning: When used with reference types (classes), this method will share the same
+    ///            object with all subcontainers. Be careful to avoid race conditions.
+    ///
+    /// - parameters:
+    ///     - instance: Pre-initialized `Service` instance to register.
+    ///     - interface: An interface that this `Service` supports (besides its own type).
+    public mutating func instance<S>(_ instance: S) {
+        return self.instance(S.self, instance)
+    }
 
     /// Registers a pre-initialized instance of a `Service` conforming to a single interface to the `Services`.
     ///
@@ -73,32 +90,20 @@ public struct Services: CustomStringConvertible {
     /// - parameters:
     ///     - instance: Pre-initialized `Service` instance to register.
     ///     - interface: An interface that this `Service` supports (besides its own type).
-    public mutating func register<S>(_ instance: S, as interface: Any.Type) where S: Service {
-        return self.register(instance, as: [interface])
-    }
-
-    /// Registers a pre-initialized instance of a `Service` to the `Services`.
-    ///
-    ///     services.register(PrintLogger())
-    ///
-    /// This method also supports declaring conformance for zero or more protocols.
-    ///
-    ///     services.register(PrintLogger(), as: [Logger.self, ErrorLogger.self])
-    ///
-    /// - warning: When used with reference types (classes), this method will share the same
-    ///            object with all subcontainers. Be careful to avoid race conditions.
-    ///
-    /// - parameters:
-    ///     - instance: Pre-initialized `Service` instance to register.
-    ///     - interfaces: Zero or more interfaces that this `Service` supports (besides its own type).
-    public mutating func register<S>(_ instance: S, as interfaces: [Any.Type] = []) where S: Service {
-        let factory = BasicServiceFactory(S.self, supports: interfaces) { container in
+    public mutating func instance<S>(_ interface: S.Type, _ instance: S) {
+        let id = ServiceID(S.self)
+        let factory = ServiceFactory<S> { c in
             return instance
         }
-        self.register(factory)
+        self.factories[id] = factory
+    }
+    
+    // MARK: Factory
+
+    public mutating func register<S>(_ factory: @escaping (Container) throws -> (S)) {
+        self.register(S.self, factory)
     }
 
-    // MARK: Factory
 
     /// Registers a `Service` creating closure (service factory) conforming to a single interface to the `Services`.
     ///
@@ -119,58 +124,12 @@ public struct Services: CustomStringConvertible {
     /// - parameters:
     ///     - interfaces: Zero or more interfaces that this `Service` supports (besides its own type).
     ///     - factory: `Container` accepting closure that returns an initialized instance of this `Service`.
-    public mutating func register<S>(_ interface: Any.Type, factory: @escaping (Container) throws -> (S)) where S: Service {
-        let factory = BasicServiceFactory(S.self, supports: [interface]) { worker in
-            try factory(worker)
+    public mutating func register<S>(_ interface: S.Type, _ factory: @escaping (Container) throws -> (S)) {
+        let id = ServiceID(S.self)
+        let factory = ServiceFactory<S> { c in
+            return try factory(c)
         }
-        self.register(factory)
-    }
-
-    /// Registers a `Service` creating closure (service factory) to the `Services`.
-    ///
-    ///     services.register { container in
-    ///         return PrintLogger()
-    ///     }
-    ///
-    /// This is the most common method for registering services as it ensures a new instance of the `Service` is
-    /// initialized for each sub-container. It also provides access to the `Container` when the `Service` is initialized
-    /// making it easy to query the `Container` for dependencies.
-    ///
-    ///     services.register { container in
-    ///         return try RedisCache(connection: container.make())
-    ///     }
-    ///
-    /// This method also supports declaring conformance for zero or more protocols.
-    ///
-    ///     services.register([Logger.self, ErrorLogger.self]) { container in
-    ///         return PrintLogger()
-    ///     }
-    ///
-    /// See the other `register(_:factory:)` method that accepts a single interface.
-    ///
-    /// - parameters:
-    ///     - interfaces: Zero or more interfaces that this `Service` supports (besides its own type).
-    ///     - factory: `Container` accepting closure that returns an initialized instance of this `Service`.
-    public mutating func register<S>(_ interfaces: [Any.Type] = [], factory: @escaping (Container) throws -> (S)) where S: Service {
-        let factory = BasicServiceFactory(S.self, supports: interfaces) { worker in
-            try factory(worker)
-        }
-        self.register(factory)
-    }
-
-    // MARK: Type
-
-    /// Registers a `ServiceType` to the `Services`. This is the most concise register method since the `ServiceType`
-    /// protocol supplies all required information.
-    ///
-    ///     extension PrintLogger: ServiceType { ... }
-    ///
-    ///     services.register(PrintLogger.self)
-    ///
-    /// See `ServiceType` for more information.
-    public mutating func register<S>(_ type: S.Type = S.self) where S: ServiceType {
-        let factory = TypeServiceFactory(S.self)
-        self.register(factory)
+        self.factories[id] = factory
     }
 
     // MARK: Provider
@@ -185,25 +144,23 @@ public struct Services: CustomStringConvertible {
     /// - parameters:
     ///     - provider: Initialized `Provider` to register.
     /// - throws: The provider can throw errors while registering services.
-    public mutating func register<P>(_ provider: P) throws where P: Provider {
+    public mutating func provider<P>(_ provider: P) throws where P: ServiceProvider {
         guard !providers.contains(where: { Swift.type(of: $0) == P.self }) else {
             return
         }
         try provider.register(&self)
         providers.append(provider)
     }
-
-    // MARK: Custom
-
-    /// Registers any type conforming to `ServiceFactory`. This method should only be used when implementing custom
-    /// behavior. All other register methods call this method.
-    public mutating func register(_ factory: ServiceFactory) {
-        if let existing = factories.index(where: { $0.serviceType == factory.serviceType }) {
-            factories[existing] = factory
-        } else {
-            factories.append(factory)
-        }
+    
+    // MARK: Extend
+    
+    /// Adds a supplement closure for the given Service type
+    public mutating func extend<S>(_ service: S.Type, _ closure: @escaping (inout S, Container) throws -> Void) {
+        let id = ServiceID(S.self)
+        let ext = ServiceExtension<S>(closure: closure)
+        self.extensions[id, default: []].append(ext)
     }
+
 
     // MARK: CustomStringConvertible
 
@@ -213,15 +170,10 @@ public struct Services: CustomStringConvertible {
 
         desc.append("Services:")
         if factories.isEmpty {
-            desc.append("- none")
+            desc.append("<none>")
         } else {
-            for factory in factories {
-                if factory.serviceSupports.isEmpty {
-                    desc.append("- \(factory.serviceType)")
-                } else {
-                    let interfaces = factory.serviceSupports.map { "\($0)" }.joined(separator: ", ")
-                    desc.append("- \(factory.serviceType): \(interfaces)")
-                }
+            for (id, _) in factories {
+                desc.append("- \(id.type)")
             }
         }
 
@@ -235,5 +187,71 @@ public struct Services: CustomStringConvertible {
         }
 
         return desc.joined(separator: "\n")
+    }
+}
+
+// MARK: Private
+
+/// Basic, closure-based `ServiceFactory` implementation.
+///
+///     let factory = BasicServiceFactory(MyFoo.self, suppports: [Foo.self]) { container in
+///         return MyFoo()
+///     }
+///
+struct ServiceFactory<T> {
+    /// Accepts a `Container`, returning an initialized service.
+    let closure: (Container) throws -> T
+    
+    /// Create a new `BasicServiceFactory`.
+    ///
+    /// - parameters:
+    ///     - type: The `ServiceFactory` service type. This is the type that should be returned by the factory closure.
+    ///     - interfaces: A list of protocols that the service supports. Empty array if the service does not support any protocols.
+    ///     - factory: A closure that accepts a container and returns an initialized service.
+    public init(_ closure: @escaping (Container) throws -> T) {
+        self.closure = closure
+    }
+    
+    /// See `ServiceFactory`.
+    public func serviceMake(for worker: Container) throws -> T {
+        return try closure(worker)
+    }
+}
+
+/// Simple wrapper around an `Any.Type` to provide better debug information.
+struct ServiceID: Hashable, Equatable, CustomStringConvertible {
+    /// See `Equatable`.
+    static func ==(lhs: ServiceID, rhs: ServiceID) -> Bool {
+        return lhs.type == rhs.type
+    }
+    
+    /// See `Hashable`.
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(type))
+    }
+    
+    /// The wrapped type.
+    internal let type: Any.Type
+    
+    /// See `CustomStringConvertible`
+    var description: String {
+        return "\(type)"
+    }
+    
+    /// Creates a new `ServiceID`, wrapping the supplied type.
+    init(_ type: Any.Type) {
+        self.type = type
+    }
+}
+
+struct ServiceExtension<T> {
+    public let closure: (inout T, Container) throws -> Void
+    
+    public init(closure: @escaping (inout T, Container) throws -> Void) {
+        self.closure = closure
+    }
+    
+    public func serviceExtend(_ instance: inout T, _ c: Container) throws {
+        try closure(&instance, c)
     }
 }
