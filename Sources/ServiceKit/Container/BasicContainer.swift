@@ -12,11 +12,14 @@ public final class BasicContainer: Container {
 
     /// See `Container.`
     public let eventLoop: EventLoop
+    
+    public var cache: ServiceCache
 
     /// Create a new `BasicContainer`.
     public init(environment: Environment, services: Services, on eventLoop: EventLoop) {
         self.environment = environment
         self.services = services
         self.eventLoop = eventLoop
+        self.cache = .init()
     }
 }

@@ -99,10 +99,66 @@ class ServiceKitTests: XCTestCase {
         XCTAssertEqual(commands.storage.count, 2)
     }
     
+    func testSingleton() throws {
+        var s = Services()
+        
+        struct Regular {
+            static var count: Int = 0
+        }
+        struct Singleton {
+            static var count: Int = 0
+        }
+        
+        s.register(Regular.self) { c in
+            Regular.count += 1
+            return .init()
+        }
+        s.singleton(Singleton.self) { c in
+            Singleton.count += 1
+            return .init()
+        }
+        
+        let c = BasicContainer(environment: .testing, services: s, on: EmbeddedEventLoop())
+        
+        _ = try c.make(Regular.self)
+        _ = try c.make(Regular.self)
+        XCTAssertEqual(Regular.count, 2)
+        
+        _ = try c.make(Singleton.self)
+        _ = try c.make(Singleton.self)
+        XCTAssertEqual(Singleton.count, 1)
+        
+        c.cache.clear()
+        _ = try c.make(Singleton.self)
+        XCTAssertEqual(Singleton.count, 2)
+    }
+    
+    func testSingletonExample() throws {
+        final class Counter {
+            var count: Int
+            init() {
+                self.count = 0
+            }
+        }
+        
+        var s = Services()
+        
+        s.singleton(Counter.self) { c in
+            return .init()
+        }
+        
+        let c = BasicContainer(environment: .testing, services: s, on: EmbeddedEventLoop())
+        try c.make(Counter.self).count += 1
+        try c.make(Counter.self).count += 1
+        try XCTAssertEqual(c.make(Counter.self).count, 2)
+    }
+    
     static var allTests = [
         ("testProtocolCase", testProtocolCase),
         ("testConcreteCase", testConcreteCase),
         ("testProvider", testProvider),
         ("testBCryptProvider", testBCryptProvider),
+        ("testSingleton", testSingleton),
+        ("testSingletonExample", testSingletonExample),
     ]
 }
