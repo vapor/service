@@ -41,16 +41,26 @@ public protocol ServiceProvider {
 
     /// Called after the container has fully initialized and after `willBoot(_:)`.
     func didBoot(_ c: Container) throws -> EventLoopFuture<Void>
+    
+    /// Called before the container shuts down.
+    func willShutdown(_ c: Container) throws -> EventLoopFuture<Void>
 }
 
 extension ServiceProvider {
-    /// See `Provider`.
-    public func willBoot(_ container: Container) throws -> EventLoopFuture<Void> {
-        return container.eventLoop.makeSucceededFuture(())
+    /// Default implementation.
+    public func willBoot(_ c: Container) throws -> EventLoopFuture<Void> {
+        return c.eventLoop.makeSucceededFuture(())
     }
     
-    /// See `Provider`.
-    public func didBoot(_ container: Container) throws -> EventLoopFuture<Void> {
-        return container.eventLoop.makeSucceededFuture(())
+    /// Default implementation.
+    public func didBoot(_ c: Container) throws -> EventLoopFuture<Void> {
+        return c.eventLoop.makeSucceededFuture(())
+    }
+    
+    /// Default implementation.
+    public func willShutdown(_ c: Container) throws -> EventLoopFuture<Void> {
+        return c.eventLoop.makeSucceededFuture(())
     }
 }
+
+#warning("TODO: consider moving to vapor and removing EL from container")
