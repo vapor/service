@@ -28,7 +28,11 @@ extension Environment {
                 return value
             }
             set (value) {
-                setenv(member, value?.description, 1)
+                if let raw = value?.description {
+                    setenv(member, value?.description ?? nil, 1)
+                } else {
+                    unsetenv(member)
+                }
             }
         }
     }
