@@ -1,6 +1,3 @@
-/// Nothing here yet...
-
-
 @available(*, unavailable, message: "Empty protocol conformance no longer required.")
 public typealias Service = Any
 

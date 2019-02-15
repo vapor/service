@@ -49,6 +49,11 @@ public struct Environment: Equatable {
         return lhs.name == rhs.name && lhs.isRelease == rhs.isRelease
     }
 
+    /// The current process of the environment.
+    public static var process: Process {
+        return Process()
+    }
+    
     // MARK: Properties
 
     /// The environment's unique name.
