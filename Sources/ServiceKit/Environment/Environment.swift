@@ -41,7 +41,7 @@ public struct Environment: Equatable {
     public static func get(_ key: String) -> String? {
         return ProcessInfo.processInfo.environment[key]
     }
-    
+
     // MARK: Equatable
 
     /// See `Equatable`
@@ -66,7 +66,7 @@ public struct Environment: Equatable {
     public var isRelease: Bool {
         return !_isDebugAssertConfiguration()
     }
-    
+
     /// The command-line arguments for this `Environment`.
     public var arguments: [String]
 
