@@ -1,15 +1,15 @@
 /// Stores cached singleton services.
-public struct ServiceCache {
+internal struct ServiceCache {
     /// Private storage.
     private var storage: [ServiceID: Any]
     
     /// Creates a new `ServiceCache`.
-    public init() {
+    init() {
         self.storage = [:]
     }
     
     /// Returns the service if cached.
-    public func get<S>(service: S.Type) -> S? {
+    func get<S>(service: S.Type) -> S? {
         let id = ServiceID(S.self)
         guard let service = self.storage[id] as? S else {
             return nil
@@ -18,13 +18,13 @@ public struct ServiceCache {
     }
     
     /// Sets a new service on the cache.
-    public mutating func set<S>(service: S) {
+    mutating func set<S>(service: S) {
         let id = ServiceID(S.self)
         self.storage[id] = service
     }
     
     /// Clears any existing cached services.
-    public mutating func clear() {
+    mutating func clear() {
         self.storage = [:]
     }
 }

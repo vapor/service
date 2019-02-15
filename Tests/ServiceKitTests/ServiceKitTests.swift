@@ -8,13 +8,14 @@ class ServiceKitTests: XCTestCase {
         s.instance(Log.self, PrintLog())
         s.instance(PrintLog.self, PrintLog())
 
-        let c = BasicContainer(
-            environment: .production,
+        let c = Container(
+            env: .production,
             services: s,
             on: EmbeddedEventLoop()
         )
         XCTAssertNoThrow(try c.make(PrintLog.self))
         try XCTAssert(c.make(Log.self) is PrintLog)
+        try c.shutdown().wait()
     }
 
     func testConcreteCase() throws {
@@ -22,26 +23,28 @@ class ServiceKitTests: XCTestCase {
         s.instance(PrintLog.self, .init())
         s.instance(AllCapsLog.self, .init())
 
-        let c = BasicContainer(
-            environment: .production,
+        let c = Container(
+            env: .production,
             services: s,
             on: EmbeddedEventLoop()
         )
         XCTAssertNoThrow(try c.make(AllCapsLog.self))
         XCTAssertNoThrow(try c.make(PrintLog.self))
+        try c.shutdown().wait()
     }
 
     func testProvider() throws {
         var s = Services()
         try s.provider(AllCapsProvider())
 
-        let c = BasicContainer(
-            environment: .production,
+        let c = Container(
+            env: .production,
             services: s,
             on: EmbeddedEventLoop()
         )
         XCTAssertNoThrow(try c.make(AllCapsLog.self))
         try XCTAssertTrue(c.make(Log.self) is AllCapsLog)
+        try c.shutdown().wait()
     }
     
     func testBCryptProvider() throws {
@@ -52,26 +55,28 @@ class ServiceKitTests: XCTestCase {
         
         // production
         do {
-            let c = BasicContainer(
-                environment: .production,
+            let c = Container(
+                env: .production,
                 services: s,
                 on: EmbeddedEventLoop()
             )
             
             try XCTAssertEqual(c.make(BCryptHasher.self).cost, 12)
             try XCTAssert(c.make(Hasher.self) is BCryptHasher)
+            try c.shutdown().wait()
         }
         
         // development
         do {
-            let c = BasicContainer(
-                environment: .development,
+            let c = Container(
+                env: .development,
                 services: s,
                 on: EmbeddedEventLoop()
             )
             
             try XCTAssertEqual(c.make(BCryptHasher.self).cost, 4)
             try XCTAssert(c.make(Hasher.self) is BCryptHasher)
+            try c.shutdown().wait()
         }
     }
     
@@ -88,8 +93,8 @@ class ServiceKitTests: XCTestCase {
             return commands
         }
         
-        let c = BasicContainer(
-            environment: .production,
+        let c = Container(
+            env: .production,
             services: s,
             on: EmbeddedEventLoop()
         )
@@ -97,6 +102,7 @@ class ServiceKitTests: XCTestCase {
         let commands = try c.make(Commands.self)
         print(commands)
         XCTAssertEqual(commands.storage.count, 2)
+        try c.shutdown().wait()
     }
     
     func testSingleton() throws {
@@ -118,7 +124,7 @@ class ServiceKitTests: XCTestCase {
             return .init()
         }
         
-        let c = BasicContainer(environment: .testing, services: s, on: EmbeddedEventLoop())
+        let c = Container(env: .testing, services: s, on: EmbeddedEventLoop())
         
         _ = try c.make(Regular.self)
         _ = try c.make(Regular.self)
@@ -127,10 +133,7 @@ class ServiceKitTests: XCTestCase {
         _ = try c.make(Singleton.self)
         _ = try c.make(Singleton.self)
         XCTAssertEqual(Singleton.count, 1)
-        
-        c.cache.clear()
-        _ = try c.make(Singleton.self)
-        XCTAssertEqual(Singleton.count, 2)
+        try c.shutdown().wait()
     }
     
     func testSingletonExample() throws {
@@ -147,10 +150,11 @@ class ServiceKitTests: XCTestCase {
             return .init()
         }
         
-        let c = BasicContainer(environment: .testing, services: s, on: EmbeddedEventLoop())
+        let c = Container(env: .testing, services: s, on: EmbeddedEventLoop())
         try c.make(Counter.self).count += 1
         try c.make(Counter.self).count += 1
         try XCTAssertEqual(c.make(Counter.self).count, 2)
+        try c.shutdown().wait()
     }
     
     func testEnvironmentDynamicAccess() {
