@@ -27,7 +27,7 @@ extension Environment {
                 
                 return value
             }
-            set (value) {
+            nonmutating set (value) {
                 if let raw = value?.description {
                     setenv(member, raw, 1)
                 } else {
