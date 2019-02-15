@@ -32,7 +32,7 @@ struct ConfigurableLog: Log {
     }
 }
 
-final class AllCapsProvider: ServiceProvider {
+final class AllCapsProvider: Provider {
     func register(_ services: inout Services) throws {
         services.instance(AllCapsLog.self, .init())
         services.register(Log.self) { c in
@@ -43,7 +43,7 @@ final class AllCapsProvider: ServiceProvider {
 
 // MARK: BCrypt
 
-final class BCryptProvider: ServiceProvider {
+final class BCryptProvider: Provider {
     func register(_ s: inout Services) throws {
         s.register(BCryptConfig.self) { c in
             switch c.environment {
@@ -105,7 +105,7 @@ struct Commands {
 struct ServeCommand: Command { }
 struct MigrateCommand: Command { }
 
-final class FluentProvider: ServiceProvider {
+final class FluentProvider: Provider {
     func register(_ s: inout Services) throws {
         s.register(MigrateCommand.self) { c in
             return .init()

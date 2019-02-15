@@ -51,7 +51,7 @@ public struct Services: CustomStringConvertible {
     var factories: [ServiceID: Any]
 
     /// All registered service providers. These are stored so that their lifecycle methods can be called later.
-    var providers: [ServiceProvider]
+    var providers: [Provider]
     
     var extensions: [ServiceID: [Any]]
 
@@ -177,7 +177,7 @@ public struct Services: CustomStringConvertible {
     /// - parameters:
     ///     - provider: Initialized `Provider` to register.
     /// - throws: The provider can throw errors while registering services.
-    public mutating func provider<P>(_ provider: P) throws where P: ServiceProvider {
+    public mutating func provider<P>(_ provider: P) throws where P: Provider {
         guard !providers.contains(where: { Swift.type(of: $0) == P.self }) else {
             return
         }

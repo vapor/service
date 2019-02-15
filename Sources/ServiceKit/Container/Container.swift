@@ -84,7 +84,7 @@ extension Container {
     }
     
     /// All `Provider`s that have been registered to this `Container`'s `Services`.
-    public var providers: [ServiceProvider] {
+    public var providers: [Provider] {
         return self.services.providers
     }
 }

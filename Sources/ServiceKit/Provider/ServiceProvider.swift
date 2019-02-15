@@ -29,7 +29,7 @@ import NIO
 /// The `didBoot(_:)` method is guaranteed to be called after all providers have run `willBoot(_:)`. Most providers should
 /// try to do their work in the `didBoot(_:)` method, resorting to the `willBoot(_:)` method if they want to pre-empt work
 /// done by other providers.
-public protocol ServiceProvider {
+public protocol Provider {
     /// Register all services you would like to provide the `Container` here.
     ///
     ///     services.register(RedisCache.self)
@@ -37,30 +37,42 @@ public protocol ServiceProvider {
     func register(_ s: inout Services) throws
 
     /// Called before the container has fully initialized.
-    func willBoot(_ c: Container) throws -> EventLoopFuture<Void>
+    func willBoot(_ c: Container) -> EventLoopFuture<Void>
 
     /// Called after the container has fully initialized and after `willBoot(_:)`.
-    func didBoot(_ c: Container) throws -> EventLoopFuture<Void>
+    func didBoot(_ c: Container) -> EventLoopFuture<Void>
     
     /// Called before the container shuts down.
-    func willShutdown(_ c: Container) throws -> EventLoopFuture<Void>
+    func willShutdown(_ c: Container) -> EventLoopFuture<Void>
 }
 
-extension ServiceProvider {
+extension Provider {
     /// Default implementation.
-    public func willBoot(_ c: Container) throws -> EventLoopFuture<Void> {
+    public func willBoot(_ c: Container) -> EventLoopFuture<Void> {
         return c.eventLoop.makeSucceededFuture(())
     }
     
     /// Default implementation.
-    public func didBoot(_ c: Container) throws -> EventLoopFuture<Void> {
+    public func didBoot(_ c: Container) -> EventLoopFuture<Void> {
         return c.eventLoop.makeSucceededFuture(())
     }
     
     /// Default implementation.
-    public func willShutdown(_ c: Container) throws -> EventLoopFuture<Void> {
+    public func willShutdown(_ c: Container) -> EventLoopFuture<Void> {
         return c.eventLoop.makeSucceededFuture(())
     }
 }
 
-#warning("TODO: consider moving to vapor and removing EL from container")
+extension Array where Element: Provider {
+    public func willBoot(_ c: Container) -> EventLoopFuture<Void> {
+        return .andAllSucceed(self.map { $0.willBoot(c) }, on: c.eventLoop)
+    }
+    
+    public func didBoot(_ c: Container) -> EventLoopFuture<Void> {
+        return .andAllSucceed(self.map { $0.didBoot(c) }, on: c.eventLoop)
+    }
+    
+    public func willShutdown(_ c: Container) -> EventLoopFuture<Void> {
+        return .andAllSucceed(self.map { $0.willShutdown(c) }, on: c.eventLoop)
+    }
+}
