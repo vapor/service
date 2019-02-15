@@ -6,13 +6,13 @@ extension Environment {
     @dynamicMemberLookup public struct Process {
         
         /// The process information of the environment.
-        public let info: ProcessInfo
+        private let _info: ProcessInfo
         
         /// Creates a new `Process` wrapper for process information.
         ///
         /// - parameter info: The process info that the wrapper accesses. Defaults to `ProcessInto.processInfo`.
-        public init(info: ProcessInfo = .processInfo) {
-            self.info = info
+        internal init(info: ProcessInfo = .processInfo) {
+            self._info = info
         }
         
         /// Gets a variable's value from the process' environment, and converts it to generic type `T`.
@@ -21,7 +21,7 @@ extension Environment {
         ///     Environment.process.DATABASE_PORT // 3306
         public subscript<T>(dynamicMember member: String) -> T? where T: LosslessStringConvertible {
             get {
-                guard let raw = self.info.environment[member], let value = T(raw) else {
+                guard let raw = self._info.environment[member], let value = T(raw) else {
                     return nil
                 }
                 
@@ -42,7 +42,7 @@ extension Environment {
         ///     Environment.process.DATABASE_USER // "root"
         public subscript(dynamicMember member: String) -> String? {
             get {
-                guard let value = self.info.environment[member] else {
+                guard let value = self._info.environment[member] else {
                     return nil
                 }
                 
