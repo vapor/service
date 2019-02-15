@@ -7,6 +7,7 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(Environment.process.DATABASE_PORT, 3306)
         
         Environment.process.DATABASE_PORT = nil
+        XCTAssertEqual(Environment.process.DATABASE_PORT, nil)
     }
     
     static let allTests = [
