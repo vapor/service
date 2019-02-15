@@ -168,6 +168,6 @@ class ServiceKitTests: XCTestCase {
         ("testBCryptProvider", testBCryptProvider),
         ("testSingleton", testSingleton),
         ("testSingletonExample", testSingletonExample),
-        ("testDynamicAccess", testDynamicAccess)
+        ("testEnvironmentDynamicAccess", testEnvironmentDynamicAccess)
     ]
 }
