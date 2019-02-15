@@ -8,11 +8,11 @@ class ServiceKitTests: XCTestCase {
         s.instance(Log.self, PrintLog())
         s.instance(PrintLog.self, PrintLog())
 
-        let c = Container(
+        let c = try Container.boot(
             env: .production,
             services: s,
             on: EmbeddedEventLoop()
-        )
+        ).wait()
         XCTAssertNoThrow(try c.make(PrintLog.self))
         try XCTAssert(c.make(Log.self) is PrintLog)
         try c.shutdown().wait()
@@ -23,11 +23,11 @@ class ServiceKitTests: XCTestCase {
         s.instance(PrintLog.self, .init())
         s.instance(AllCapsLog.self, .init())
 
-        let c = Container(
+        let c = try Container.boot(
             env: .production,
             services: s,
             on: EmbeddedEventLoop()
-        )
+        ).wait()
         XCTAssertNoThrow(try c.make(AllCapsLog.self))
         XCTAssertNoThrow(try c.make(PrintLog.self))
         try c.shutdown().wait()
@@ -37,11 +37,11 @@ class ServiceKitTests: XCTestCase {
         var s = Services()
         try s.provider(AllCapsProvider())
 
-        let c = Container(
+        let c = try Container.boot(
             env: .production,
             services: s,
             on: EmbeddedEventLoop()
-        )
+        ).wait()
         XCTAssertNoThrow(try c.make(AllCapsLog.self))
         try XCTAssertTrue(c.make(Log.self) is AllCapsLog)
         try c.shutdown().wait()
@@ -55,11 +55,11 @@ class ServiceKitTests: XCTestCase {
         
         // production
         do {
-            let c = Container(
+            let c = try Container.boot(
                 env: .production,
                 services: s,
                 on: EmbeddedEventLoop()
-            )
+            ).wait()
             
             try XCTAssertEqual(c.make(BCryptHasher.self).cost, 12)
             try XCTAssert(c.make(Hasher.self) is BCryptHasher)
@@ -68,11 +68,11 @@ class ServiceKitTests: XCTestCase {
         
         // development
         do {
-            let c = Container(
+            let c = try Container.boot(
                 env: .development,
                 services: s,
                 on: EmbeddedEventLoop()
-            )
+            ).wait()
             
             try XCTAssertEqual(c.make(BCryptHasher.self).cost, 4)
             try XCTAssert(c.make(Hasher.self) is BCryptHasher)
@@ -93,11 +93,11 @@ class ServiceKitTests: XCTestCase {
             return commands
         }
         
-        let c = Container(
+        let c = try Container.boot(
             env: .production,
             services: s,
             on: EmbeddedEventLoop()
-        )
+        ).wait()
         
         let commands = try c.make(Commands.self)
         print(commands)
@@ -124,7 +124,11 @@ class ServiceKitTests: XCTestCase {
             return .init()
         }
         
-        let c = Container(env: .testing, services: s, on: EmbeddedEventLoop())
+        let c = try Container.boot(
+            env: .testing,
+            services: s,
+            on: EmbeddedEventLoop()
+        ).wait()
         
         _ = try c.make(Regular.self)
         _ = try c.make(Regular.self)
@@ -150,7 +154,11 @@ class ServiceKitTests: XCTestCase {
             return .init()
         }
         
-        let c = Container(env: .testing, services: s, on: EmbeddedEventLoop())
+        let c = try Container.boot(
+            env: .testing,
+            services: s,
+            on: EmbeddedEventLoop()
+        ).wait()
         try c.make(Counter.self).count += 1
         try c.make(Counter.self).count += 1
         try XCTAssertEqual(c.make(Counter.self).count, 2)
@@ -170,6 +178,7 @@ class ServiceKitTests: XCTestCase {
         ("testConcreteCase", testConcreteCase),
         ("testProvider", testProvider),
         ("testBCryptProvider", testBCryptProvider),
+        ("testCommands", testCommands),
         ("testSingleton", testSingleton),
         ("testSingletonExample", testSingletonExample),
         ("testEnvironmentDynamicAccess", testEnvironmentDynamicAccess)

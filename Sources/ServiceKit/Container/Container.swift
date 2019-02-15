@@ -2,6 +2,13 @@
 @_exported import class NIO.EventLoopFuture
 
 public final class Container {
+    public static func boot(env: Environment = .development, services: Services, on eventLoop: EventLoop) -> EventLoopFuture<Container> {
+        let container = Container(env: env, services: services, on: eventLoop)
+        return container.willBoot()
+            .flatMap { container.didBoot() }
+            .map { container }
+    }
+    
     /// Service `Environment` (e.g., production, dev). Use this to dynamically swap services based on environment.
     public let env: Environment
     
@@ -21,7 +28,7 @@ public final class Container {
     
     private var didShutdown: Bool
     
-    public init(env: Environment = .development, services: Services, on eventLoop: EventLoop) {
+    private init(env: Environment, services: Services, on eventLoop: EventLoop) {
         self.env = env
         self.services = services
         self.eventLoop = eventLoop
@@ -78,11 +85,11 @@ public final class Container {
         return instance
     }
     
-    public func willBoot() -> EventLoopFuture<Void> {
+    private func willBoot() -> EventLoopFuture<Void> {
         return .andAllSucceed(self.providers.map { $0.willBoot(self) }, on: self.eventLoop)
     }
     
-    public func didBoot() -> EventLoopFuture<Void> {
+    private func didBoot() -> EventLoopFuture<Void> {
         return .andAllSucceed(self.providers.map { $0.didBoot(self) }, on: self.eventLoop)
     }
     
