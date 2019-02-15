@@ -153,6 +153,14 @@ class ServiceKitTests: XCTestCase {
         try XCTAssertEqual(c.make(Counter.self).count, 2)
     }
     
+    func testEnvironmentDynamicAccess() {
+        Environment.process.DATABASE_PORT = 3306
+        XCTAssertEqual(Environment.process.DATABASE_PORT, 3306)
+        
+        Environment.process.DATABASE_PORT = nil
+        XCTAssertEqual(Environment.process.DATABASE_PORT, nil)
+    }
+    
     static var allTests = [
         ("testProtocolCase", testProtocolCase),
         ("testConcreteCase", testConcreteCase),
@@ -160,5 +168,6 @@ class ServiceKitTests: XCTestCase {
         ("testBCryptProvider", testBCryptProvider),
         ("testSingleton", testSingleton),
         ("testSingletonExample", testSingletonExample),
+        ("testDynamicAccess", testDynamicAccess)
     ]
 }
