@@ -15,7 +15,7 @@ extension Environment {
             self.info = info
         }
         
-        /// Gets a key from the proccess environment
+        /// Gets a variable's value from the process' environment, and converts it to generic type `T`.
         ///
         ///     Environment.process.DATABASE_PORT = 3306
         ///     Environment.process.DATABASE_PORT // 3306
@@ -29,6 +29,27 @@ extension Environment {
             }
             nonmutating set (value) {
                 if let raw = value?.description {
+                    setenv(member, raw, 1)
+                } else {
+                    unsetenv(member)
+                }
+            }
+        }
+        
+        /// Gets a variable's value from the process' environment as a `String`.
+        ///
+        ///     Environment.process.DATABASE_USER = "root"
+        ///     Environment.process.DATABASE_USER // "root"
+        public subscript(dynamicMember member: String) -> String? {
+            get {
+                guard let value = self.info.environment[member] else {
+                    return nil
+                }
+                
+                return value
+            }
+            nonmutating set (value) {
+                if let raw = value {
                     setenv(member, raw, 1)
                 } else {
                     unsetenv(member)
