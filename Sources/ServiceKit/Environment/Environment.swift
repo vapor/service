@@ -49,6 +49,11 @@ public struct Environment: Equatable {
         return lhs.name == rhs.name && lhs.isRelease == rhs.isRelease
     }
 
+    /// The current process of the environment.
+    public static var process: Process {
+        return Process()
+    }
+    
     // MARK: Properties
 
     /// The environment's unique name.
@@ -60,11 +65,6 @@ public struct Environment: Equatable {
     /// providing warnings about configuration states that are not suitable for production.
     public var isRelease: Bool {
         return !_isDebugAssertConfiguration()
-    }
-
-    /// The current process of the environment.
-    public var process: Process {
-        return Process()
     }
     
     /// The command-line arguments for this `Environment`.
