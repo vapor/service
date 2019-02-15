@@ -3,4 +3,5 @@ import XCTest
 
 XCTMain([
     testCase(ServiceKitTests.allTests),
+    testCase(EnvironmentTests.allTests)
 ])
