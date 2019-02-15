@@ -63,16 +63,16 @@ extension Provider {
     }
 }
 
-extension Array where Element: Provider {
-    public func willBoot(_ c: Container) -> EventLoopFuture<Void> {
-        return .andAllSucceed(self.map { $0.willBoot(c) }, on: c.eventLoop)
+extension Container {
+    public func willBoot() -> EventLoopFuture<Void> {
+        return .andAllSucceed(self.providers.map { $0.willBoot(self) }, on: self.eventLoop)
     }
     
-    public func didBoot(_ c: Container) -> EventLoopFuture<Void> {
-        return .andAllSucceed(self.map { $0.didBoot(c) }, on: c.eventLoop)
+    public func didBoot() -> EventLoopFuture<Void> {
+        return .andAllSucceed(self.providers.map { $0.didBoot(self) }, on: self.eventLoop)
     }
     
-    public func willShutdown(_ c: Container) -> EventLoopFuture<Void> {
-        return .andAllSucceed(self.map { $0.willShutdown(c) }, on: c.eventLoop)
+    public func willShutdown() -> EventLoopFuture<Void> {
+        return .andAllSucceed(self.providers.map { $0.willShutdown(self) }, on: self.eventLoop)
     }
 }
