@@ -62,17 +62,3 @@ extension Provider {
         return c.eventLoop.makeSucceededFuture(())
     }
 }
-
-extension Container {
-    public func willBoot() -> EventLoopFuture<Void> {
-        return .andAllSucceed(self.providers.map { $0.willBoot(self) }, on: self.eventLoop)
-    }
-    
-    public func didBoot() -> EventLoopFuture<Void> {
-        return .andAllSucceed(self.providers.map { $0.didBoot(self) }, on: self.eventLoop)
-    }
-    
-    public func willShutdown() -> EventLoopFuture<Void> {
-        return .andAllSucceed(self.providers.map { $0.willShutdown(self) }, on: self.eventLoop)
-    }
-}

@@ -1,41 +1,41 @@
-import NIO
+@_exported import protocol NIO.EventLoop
+@_exported import class NIO.EventLoopFuture
 
-/// `Container`s are used to create instances of services that your application needs in a configurable way.
-///
-///     let client = try container.make(Client.self)
-///
-/// Each `Container` has `Config`, `Environment`, and `Services`. It uses this information to dynamically provide
-/// services based on your configuration and environment.
-///
-///     switch env {
-///     case .production: config.prefer(ProductionLogger.self, for: Logger.self)
-///     default: config.prefer(DebugLogger.self, for: Logger.self)
-///     }
-///
-///     ...
-///
-///     let logger = try container.make(Logger.self) // changes based on environment
-///
-/// Containers are also `Worker`s, meaning they have a reference to an `EventLoop`.
-///
-///     print(container.eventLoop)
-///
-/// - warning: You should never use services created from a `Container` on _another_ `Container`'s `EventLoop`.
-public protocol Container: class {
-    /// Service `Environment` (e.g., production, dev). Use this to dynamically swap services based on environment.
-    var environment: Environment { get }
-
-    /// Available services. This struct contains all of this `Container`'s available service implementations.
-    var services: Services { get }
+public final class Container {
+    public static func boot(env: Environment = .development, services: Services, on eventLoop: EventLoop) -> EventLoopFuture<Container> {
+        let container = Container(env: env, services: services, on: eventLoop)
+        return container.willBoot()
+            .flatMap { container.didBoot() }
+            .map { container }
+    }
     
-    /// Stores cached singleton services.
-    var cache: ServiceCache { get set }
+    /// Service `Environment` (e.g., production, dev). Use this to dynamically swap services based on environment.
+    public let env: Environment
+    
+    /// Available services. This struct contains all of this `Container`'s available service implementations.
+    public let services: Services
+    
+    /// All `Provider`s that have been registered to this `Container`'s `Services`.
+    public var providers: [Provider] {
+        return self.services.providers
+    }
     
     /// This container's event loop.
-    var eventLoop: EventLoop { get }
-}
-
-extension Container {
+    public let eventLoop: EventLoop
+    
+    /// Stores cached singleton services.
+    private var cache: ServiceCache
+    
+    private var didShutdown: Bool
+    
+    private init(env: Environment, services: Services, on eventLoop: EventLoop) {
+        self.env = env
+        self.services = services
+        self.eventLoop = eventLoop
+        self.cache = .init()
+        self.didShutdown = false
+    }
+    
     /// Creates a service for the supplied interface or type.
     ///
     ///     let redis = try container.make(RedisCache.self)
@@ -52,6 +52,8 @@ extension Container {
     /// - throws: Any error finding or initializing the requested service.
     /// - returns: Initialized instance of `T`
     public func make<S>(_ service: S.Type = S.self) throws -> S {
+        assert(!self.didShutdown, "Container.shutdown() has been called, this Container is no longer valid.")
+        
         // check if cached
         if let cached = self.cache.get(service: S.self) {
             return cached
@@ -83,8 +85,25 @@ extension Container {
         return instance
     }
     
-    /// All `Provider`s that have been registered to this `Container`'s `Services`.
-    public var providers: [Provider] {
-        return self.services.providers
+    private func willBoot() -> EventLoopFuture<Void> {
+        return .andAllSucceed(self.providers.map { $0.willBoot(self) }, on: self.eventLoop)
+    }
+    
+    private func didBoot() -> EventLoopFuture<Void> {
+        return .andAllSucceed(self.providers.map { $0.didBoot(self) }, on: self.eventLoop)
+    }
+    
+    public func shutdown() -> EventLoopFuture<Void> {
+        return EventLoopFuture<Void>.andAllSucceed(
+            self.providers.map { $0.willShutdown(self) },
+            on: self.eventLoop
+        ).map {
+            self.cache.clear()
+            self.didShutdown = true
+        }
+    }
+    
+    deinit {
+        assert(self.didShutdown, "Container.shutdown() was not called before Container deinitialized")
     }
 }

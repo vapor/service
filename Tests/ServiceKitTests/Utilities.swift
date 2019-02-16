@@ -46,7 +46,7 @@ final class AllCapsProvider: Provider {
 final class BCryptProvider: Provider {
     func register(_ s: inout Services) throws {
         s.register(BCryptConfig.self) { c in
-            switch c.environment {
+            switch c.env {
             case .production:
                 return .init(cost: 12)
             default:
