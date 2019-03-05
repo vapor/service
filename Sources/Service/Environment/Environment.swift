@@ -39,6 +39,22 @@ public struct Environment: Equatable {
     public static func get(_ key: String) -> String? {
         return ProcessInfo.processInfo.environment[key]
     }
+    
+    /// Gets an instance of `LosslessStringConvertible` type `T` initialized from
+    /// the string value associated with the `key` from the process environment.
+    ///
+    ///     let port = Environment.get("APP_PORT") ?? 9092
+    ///     let isEnabled = Environment.get("FEATURE_IS_ENABLED") ?? false
+    ///     let pollInterval: TimeInterval = Environment.get("POLL_INTERVAL") ?? 10
+    ///
+    /// The above variables would be parsed from the process environment
+    /// in a type-safe way using the `LosslessStringConvertible` protocol.
+    ///
+    /// Default values are provided with nil coalescing in the event the value is
+    /// missing from the environment or `LosslessStringConvertible` initialization fails.
+    public static func get<T>(_ key: String) -> T? where T: LosslessStringConvertible {
+        return get(key).flatMap { T($0) }
+    }
 
     // MARK: Equatable
 
