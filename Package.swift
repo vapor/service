@@ -7,7 +7,7 @@ let package = Package(
         .library(name: "ServiceKit", targets: ["ServiceKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", .branch("master"))
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0-convergence"),
     ],
     targets: [
         .target(name: "ServiceKit", dependencies: ["NIO"]),
