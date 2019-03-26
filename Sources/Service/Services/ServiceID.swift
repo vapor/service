@@ -5,8 +5,20 @@ internal struct ServiceID: Hashable, Equatable, CustomStringConvertible {
         return lhs.type == rhs.type
     }
 
+    // #if compiler(>=4.2)
+    #if swift(>=4.1.50)
     /// See `Hashable`.
-    internal let hashValue: Int
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self._hashValue)
+    }
+    #else
+    /// See `Hashable`.
+    public var hashValue: Int {
+        return self._hashValue
+    }
+    #endif
+    
+    private let _hashValue: Int
 
     /// The wrapped type.
     internal let type: Any.Type
@@ -19,6 +31,6 @@ internal struct ServiceID: Hashable, Equatable, CustomStringConvertible {
     /// Creates a new `ServiceID`, wrapping the supplied type.
     init(_ type: Any.Type) {
         self.type = type
-        self.hashValue = ObjectIdentifier(type).hashValue
+        self._hashValue = ObjectIdentifier(type).hashValue
     }
 }
