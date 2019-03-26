@@ -7,7 +7,7 @@ protocol Log {
     func log(_ string: String)
 }
 
-class PrintLog: Log, Service {
+final class PrintLog: Log, Service {
     func log(_ string: String) {
         print("[Print Log] \(string)")
     }
@@ -22,7 +22,7 @@ extension PrintLog: ServiceType {
 }
 
 
-class AllCapsLog: Log {
+final class AllCapsLog: Log {
     func log(_ string: String) {
         print(string.uppercased())
     }
@@ -70,7 +70,7 @@ protocol Hasher {
     func hash(_ string: String) -> String
 }
 
-class BCryptHasher: Hasher {
+final class BCryptHasher: Hasher {
     let cost: Int
 
     init(cost: Int) {
